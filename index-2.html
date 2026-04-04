@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#111115">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>NeuroPlanner</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.9/babel.min.js"></script>
+<style>
+:root{--bg:#111115;--bg2:#1a1a21;--card:#1f1f28;--card2:#252530;--bdr:#2a2a36;--bdr2:#353545;--t1:#f0eff8;--t2:#b0aec5;--t3:#706e88;--t4:#4a4862;--accent:#c8a96e;--green:#6ec898;--teal:#5ab8b2;--coral:#d08878;--lilac:#9888c8;--blue:#6898d0;--rose:#c8789a;--radius:16px;--shadow:0 2px 12px rgba(0,0,0,.25);--fh:'Sora',sans-serif;--fb:'DM Sans',sans-serif}
+.light{--bg:#f8f6f2;--bg2:#efece6;--card:#ffffff;--card2:#f5f3ee;--bdr:#e0dbd2;--bdr2:#d0c9be;--t1:#1a1818;--t2:#5a5548;--t3:#908878;--t4:#b8b0a0;--accent:#a08840;--green:#4a9a6e;--teal:#3a8a86;--coral:#b86858;--lilac:#7868a0;--blue:#4878b0;--shadow:0 2px 12px rgba(0,0,0,.06)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--t1);font-family:var(--fb);-webkit-font-smoothing:antialiased;height:100dvh;overflow:hidden}
+body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+#root{display:flex;flex-direction:column;flex:1;overflow:hidden}
+button{cursor:pointer;border:none;background:none;font-family:var(--fb);font-size:15px}
+input,select,textarea{font-family:var(--fb);font-size:15px;color:var(--t1)}
+input::placeholder,textarea::placeholder{color:var(--t4)}
+::-webkit-scrollbar{width:0;display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes slideDown{from{transform:translateY(-12px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.15);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes confetti{0%{transform:translateY(-10px) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes pop{0%{transform:scale(0)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useEffect,useCallback,useMemo}=React;
+const ls=(k,d)=>{try{const v=localStorage.getItem("np_"+k);return v?JSON.parse(v):d}catch{return d}};
+const ss=(k,v)=>{try{localStorage.setItem("np_"+k,JSON.stringify(v))}catch{}};
+const TD=()=>new Date().toISOString().split("T")[0];
+const WK=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const fD=s=>{try{return new Date(s+"T12:00:00").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}catch{return s}};
+const fS=s=>{try{return new Date(s+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}catch{return s}};
+const fM=m=>m>=60?Math.floor(m/60)+"h"+(m%60?" "+m%60+"m":""):m+"m";
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const wkD=r=>{const d=new Date(r+"T12:00:00"),dy=d.getDay(),df=d.getDate()-dy+(dy===0?-6:1),m=new Date(d);m.setDate(df);return Array.from({length:7},(_,i)=>{const x=new Date(m);x.setDate(m.getDate()+i);return x.toISOString().split("T")[0]})};
+const getHour=()=>new Date().getHours();
+const getGreeting=()=>{const h=getHour();return h<12?"Good morning":h<17?"Good afternoon":"Good evening"};
+
+const Ic=({n,s=18,c="currentColor"})=>{const P={plan:"M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",tasks:"M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11",today:"M12 2a10 10 0 100 20 10 10 0 000-20zm0 4v6l4 2",life:"M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8l1 1.1L12 21.3l7.8-7.8 1-1.1a5.5 5.5 0 000-7.8z",insights:"M18 20V10M12 20V4M6 20v-6",check:"M20 6L9 17l-5-5",x:"M18 6L6 18M6 6l12 12",chevR:"M9 18l6-6-6-6",chevL:"M15 18l-6-6 6-6",sun:"M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 6a6 6 0 100 12 6 6 0 000-12z",moon:"M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z",bell:"M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0",zap:"M13 2L3 14h9l-1 10 10-12h-9l1-10z",heart:"M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8l1 1.1L12 21.3l7.8-7.8 1-1.1a5.5 5.5 0 000-7.8z",wind:"M9.6 4.3A1.8 1.8 0 0112 3a2 2 0 010 4H2M12.6 8.3A1.8 1.8 0 0115 7a2 2 0 010 4H2M6.6 16.3A1.8 1.8 0 009 15a2 2 0 010 4H2",lock:"M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2zM7 11V7a5 5 0 0110 0v4",share:"M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13",cal:"M16 2v4M8 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z",focus:"M12 12m-3 0a3 3 0 106 0 3 3 0 10-6 0M12 2v2M12 20v2M2 12h2M20 12h2"};return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={P[n]||P.check}/></svg>};
+
+const CC={hygiene:"#c8789a",household:"#5ab8b2",bean:"#c8a96e",creative:"#9888c8",exercise:"#6ec898",reminders:"#6898d0",selfcare:"#d08878"};
+const BLK=[{key:"morning",label:"Morning",cap:180,color:"#c8a96e",ic:"sun"},{key:"afternoon",label:"Afternoon",cap:240,color:"#6898d0",ic:"focus"},{key:"evening",label:"Evening",cap:180,color:"#9888c8",ic:"moon"},{key:"anytime",label:"Anytime",cap:999,color:"#5ab8b2",ic:"zap"}];
+const ENG=[{v:3,l:"High energy",c:"#6ec898",e:"⚡"},{v:2,l:"Medium",c:"#c8a96e",e:"🔋"},{v:1,l:"Low battery",c:"#d08878",e:"🌙"}];
+const MDS=[{v:5,l:"Great",c:"#6ec898"},{v:4,l:"Good",c:"#5ab8b2"},{v:3,l:"Okay",c:"#c8a96e"},{v:2,l:"Low",c:"#6898d0"},{v:1,l:"Rough",c:"#d08878"}];
+
+const CAT={hygiene:{l:"Pamper + Hygiene",t:[["Fake tan",40],["Hair wash day",30],["Do my nails",30],["Full skincare routine",25],["Relax bath",45],["Everything shower",60],["Face mask",25],["Shave legs",15],["Exfoliate",10],["Eyebrow tidy",10],["Moisturise properly",10]]},household:{l:"Sort The House",t:[["Change bedding",20],["Wash the floors",30],["Hoover upstairs",15],["Hoover downstairs",15],["Put a wash on",5],["Hang washing up",10],["Weekly food shop",60],["Clean bathroom",30],["Wipe kitchen sides",10],["Empty all bins",10],["Tidy living room",15],["Sort the fridge",15],["Dust surfaces",15]]},bean:{l:"Bean",t:[["Walk Bean (15 min)",20],["Walk Bean (30 min)",35],["Walk Bean (45 min)",50],["Walk Bean (1 hour)",65],["Bath Bean",45],["Wash Beans toys",20],["Brush Bean",15],["Trim Beans nails",10],["Clean Beans bowls",5]]},creative:{l:"Creative (phone down)",t:[["Draw or doodle (20 min)",25],["Journal / brain dump",15],["Try a new recipe",45],["DIY project",45],["Colouring book",25],["Read for 30 mins",30],["Knit or crochet",30]]},exercise:{l:"Move Your Body",t:[["30 min walk with podcast",35],["Yoga session",30],["10 min stretch",10],["Dance around the house",15],["Pilates video",25],["Go for a run",35],["HIIT (15 min)",20],["Ab workout",15]]},reminders:{l:"Life Admin",t:[["Order meds",10],["Finance spreadsheet",30],["Check bills are paid",10],["Book GP appointment",10],["Check bank balance",5],["Reply to that message",5],["Renew prescription",10],["File paperwork",15]]},selfcare:{l:"Looking After You",t:[["Take your meds",2],["Drink 2L water",1],["No phone for 1 hour",60],["Call someone you love",15],["Read 10 pages",15],["Gratitude list (3 things)",5],["Fresh air (15 min)",15],["Make your bed",3],["Eat a proper meal",20]]}};
+
+const MODES=[{k:"chill",l:"Chill Day",d:"Light and easy.",cats:["selfcare","bean","creative"],max:120,e:"☁️"},{k:"pamper",l:"Pamper Day",d:"Full reset. Skin, hair, nails.",cats:["hygiene","selfcare"],max:180,e:"✨"},{k:"chores",l:"Chores Blitz",d:"Sort the house top to bottom.",cats:["household","selfcare","bean"],max:240,e:"🧹"},{k:"work",l:"Work Day",d:"Minimal. Morning + evening.",cats:["selfcare","bean","reminders"],max:90,e:"💼"},{k:"catchup",l:"Catch-Up Day",d:"Life admin you keep avoiding.",cats:["reminders","household","selfcare"],max:180,e:"📋"},{k:"active",l:"Active Day",d:"Move, walk Bean, get outside.",cats:["exercise","bean","selfcare"],max:150,e:"🏃"},{k:"creative",l:"Creative Day",d:"Phone down. Make something.",cats:["creative","selfcare"],max:180,e:"🎨"},{k:"custom",l:"Build My Own",d:"Pick from everything.",cats:Object.keys(CAT),max:300,e:"🔧"}];
+
+const KW={hygiene:["tan","hair","nails","skin","bath","shower","face","moistur","shav","brow"],household:["hoover","clean","dust","iron","floor","bin","fridge","kitchen","tidy","shop","wipe","bedding"],bean:["bean","dog","pet","paw","treat","bowl"],creative:["draw","paint","journal","write","read","knit","crochet","colour","craft","diy","bake"],exercise:["walk","run","yoga","stretch","dance","pilates","gym","swim","hiit","workout"],reminders:["book","appointment","dentist","doctor","gp","therapy","meds","order","bill","bank","finance","prescription"],selfcare:["water","sleep","bed","phone","screen","grateful","meal","eat","rest","break"]};
+const gCat=t=>{const l=t.toLowerCase();if(l.includes("bean"))return"bean";let b="selfcare",s=0;for(const[c,ws]of Object.entries(KW)){const n=ws.filter(w=>l.includes(w)).length;if(n>s){s=n;b=c}}return b};
+const RDEF=[{text:"Take your meds",cat:"selfcare",block:"morning",days:[0,1,2,3,4,5,6],id:"r1",mins:2},{text:"Walk Bean (30 min)",cat:"bean",block:"morning",days:[0,1,2,3,4,5,6],id:"r2",mins:35},{text:"Drink 2L water",cat:"selfcare",block:"anytime",days:[0,1,2,3,4,5,6],id:"r3",mins:1},{text:"Make your bed",cat:"selfcare",block:"morning",days:[0,1,2,3,4,5,6],id:"r4",mins:3}];
+const TIPS=["Put the phone in another room for 30 mins.","Set a 25 min timer. Do one task.","Open a book. Even 3 pages.","Text someone you haven't spoken to in a while.","Make a cup of tea. No screen.","Go stand outside for 5 minutes.","Stretch for 2 minutes. Your body is holding tension."];
+
+function calcStreaks(tasks){const track=["Take your meds","Walk Bean","Drink 2L water","Make your bed"];const st={};track.forEach(task=>{let c=0;const pfx=task.split(" ").slice(0,2).join(" ");for(let i=0;i<30;i++){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().split("T")[0];if(tasks.some(t=>t.date===ds&&t.text.startsWith(pfx)&&t.done))c++;else if(i>0)break}st[task]=c});return st}
+function exportICS(tasks,date){let ics="BEGIN:VCALENDAR\nVERSION:2.0\n";const hrs={morning:8,afternoon:12,evening:17,anytime:9};tasks.filter(t=>t.date===date).forEach(t=>{const h=hrs[t.block]||9;const ds=date.replace(/-/g,"");ics+="BEGIN:VEVENT\nDTSTART:"+ds+"T"+String(h).padStart(2,"0")+"0000\nSUMMARY:"+t.text+"\nEND:VEVENT\n"});ics+="END:VCALENDAR";const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="neuroplanner-"+date+".ics";a.click()}
+
+/* ═══ QUIZ ═══ */
+const QO={headline:"This is yours.\nAll of it.",body:["The tools, the prompts, the check-ins — none of it is generic. It shapes itself around you. Your patterns, your pace, the things that come naturally and the things that take everything you've got.","To do that, we need to get to know you a little first. Not your diagnosis — you. How your brain works. How you experience things. What a good day actually looks like.","Five minutes. Completely honest. Entirely for you."],cta:"Let's do this"};
+const QQ=[
+{id:"q1",th:"Day to day",text:"Pick the one that sounds most like your brain on a normal day.",multi:false,opts:[{id:"a",text:"A hundred tabs open, none of them loading properly",tags:["attention","adhd"]},{id:"b",text:"One tab open, but I've been staring at it for two hours without starting",tags:["paralysis","adhd"]},{id:"c",text:"Laser focused on the wrong thing entirely",tags:["hyperfocus","adhd"]},{id:"d",text:"Constantly waiting for something to feel urgent enough to actually do",tags:["urgency","adhd"]},{id:"e",text:"Running on anxiety — it's the only thing that gets me moving",tags:["anxiety"]},{id:"f",text:"Pretty steady, honestly — my brain generally does what I need it to",tags:["baseline"],n:true}]},
+{id:"q2",th:"Hard days",text:"What does a hard day actually look like for you?",multi:true,max:3,opts:[{id:"a",text:"I can't get out of bed even though I'm awake",tags:["paralysis"]},{id:"b",text:"Everything feels too loud, too bright, too much",tags:["sensory","autism"]},{id:"c",text:"I snap at people I care about and hate myself for it",tags:["dysreg"]},{id:"d",text:"I scroll for hours because I can't face anything real",tags:["avoidance"]},{id:"e",text:"I feel like I'm performing 'fine' while falling apart inside",tags:["masking"]},{id:"f",text:"I forget to eat, drink water, or look after myself at all",tags:["interoception"]},{id:"g",text:"I spend money I don't have on things I don't need",tags:["impulse"]},{id:"h",text:"Hard days are rare for me — I'm mostly here to optimise",tags:["baseline"],n:true}]},
+{id:"q3",th:"Self-relationship",text:"When you mess something up — even something small — what's your internal response?",multi:false,opts:[{id:"a",text:"I spiral into 'I'm just fundamentally broken' pretty fast",tags:["shame","rsd"]},{id:"b",text:"I laugh it off in the moment and fall apart privately later",tags:["delayed","masking"]},{id:"c",text:"I get stuck replaying it for days",tags:["rumination","ocd"]},{id:"d",text:"I get really frustrated with myself — like, genuinely angry",tags:["self_anger"]},{id:"e",text:"I usually let it go fairly quickly — everyone makes mistakes",tags:["baseline"],n:true}]},
+{id:"q4",th:"Masking",text:"How much energy do you spend making yourself seem 'normal' to other people?",multi:false,opts:[{id:"a",text:"I'm exhausted by the end of most days from it",tags:["high_masking","autism"]},{id:"b",text:"I do it automatically now — I don't even notice",tags:["auto_masking"]},{id:"c",text:"Certain situations I mask, others I don't bother",tags:["selective_masking"]},{id:"d",text:"I'm not sure what 'normal' is supposed to look like for me",tags:["identity"]},{id:"e",text:"Not much — I stopped trying to hide it a while ago",tags:["unmasked"]},{id:"f",text:"I don't feel like I have to mask — I'm comfortable being myself",tags:["baseline"],n:true}]},
+{id:"q5",th:"Relationships",text:"When you care about someone — a partner, a close friend — how does it tend to go?",multi:false,opts:[{id:"a",text:"They become really important to me — sometimes more than I am to myself",tags:["idealisation","bpd"]},{id:"b",text:"I worry constantly that I'm too much — or not enough",tags:["rsd","anxious"]},{id:"c",text:"I pull people close and then panic and push them away",tags:["disorganised","bpd"]},{id:"d",text:"I go quiet when things get tense because conflict feels unbearable",tags:["conflict_avoidance"]},{id:"e",text:"I find it hard to let people in, so I keep most at arm's length",tags:["avoidant"]},{id:"f",text:"Pretty steadily — relationships are one of the easier parts of life for me",tags:["baseline"],n:true}]},
+{id:"q6",th:"Rejection sensitivity",text:"When you feel like someone is pulling away — even slightly — what happens?",multi:false,opts:[{id:"a",text:"I notice immediately and start reading into everything",tags:["hypervigilance","rsd"]},{id:"b",text:"It hits like a physical pain and I can't think about anything else",tags:["rsd_severe","bpd"]},{id:"c",text:"I either reach out too much or go completely silent — no middle ground",tags:["disorganised"]},{id:"d",text:"I assume I've done something wrong even if I have no idea what",tags:["self_blame","rsd"]},{id:"e",text:"I feel it but I can usually sit with it without spiralling",tags:["regulated"]},{id:"f",text:"It doesn't affect me much",tags:["baseline"],n:true}]},
+{id:"q7",th:"Social energy",text:"After spending time with people — even people you like — how do you feel?",multi:false,opts:[{id:"a",text:"Drained. I need time alone to recover even from good interactions",tags:["social_exhaustion","autism"]},{id:"b",text:"Fine if it was one or two people, wrecked if it was a group",tags:["group_sensitivity"]},{id:"c",text:"I replay everything I said and pick apart what came out wrong",tags:["rumination","social_anxiety"]},{id:"d",text:"Usually okay but I never quite feel like I fit naturally",tags:["outsider"]},{id:"e",text:"Energised — being around people actually helps me",tags:["extrovert"]},{id:"f",text:"Depends on the people, but generally fine",tags:["baseline"],n:true}]},
+{id:"q8",th:"Work & groups",text:"At work or in group situations, which feels most true?",multi:false,opts:[{id:"a",text:"I'm great at the actual work — it's the people part that trips me up",tags:["social_difficulty","autism"]},{id:"b",text:"I often feel like everyone else got a manual I didn't",tags:["social_scripts","autism"]},{id:"c",text:"I overshare or say something blunt and realise too late",tags:["impulsive_speech","adhd"]},{id:"d",text:"I stay quiet because I can't get the words out in time",tags:["processing_delay"]},{id:"e",text:"I do fine — I've just learned to perform 'professional' really well",tags:["workplace_masking"]},{id:"f",text:"I genuinely find work and group situations pretty straightforward",tags:["baseline"],n:true}]},
+{id:"q9",th:"Emotional intensity",text:"When something upsets you, how intense does it get?",multi:false,opts:[{id:"a",text:"Completely overwhelming — I can't think, function or speak properly",tags:["severe_dysreg","bpd"]},{id:"b",text:"Very intense but it passes relatively quickly",tags:["intense_fast"]},{id:"c",text:"It builds slowly and then I crash later when I thought I was fine",tags:["delayed"]},{id:"d",text:"I go numb rather than feel it — which comes out sideways later",tags:["dissociation","shutdown"]},{id:"e",text:"Pretty manageable — I feel things but they don't knock me sideways",tags:["baseline"],n:true}]},
+{id:"q10",th:"Thought loops",text:"Do you ever get stuck in a loop — a thought or worry you can't stop replaying?",multi:false,opts:[{id:"a",text:"Yes — about specific situations, what I said, what someone meant",tags:["rumination","ocd"]},{id:"b",text:"Yes — about worst-case scenarios that probably won't happen",tags:["catastrophising","anxiety"]},{id:"c",text:"Yes — about relationships, whether people are okay with me",tags:["rocd","rsd"]},{id:"d",text:"Yes — about decisions, whether I made the right choice",tags:["decision_paralysis","ocd"]},{id:"e",text:"Sometimes, but I can usually pull myself out",tags:["mild"]},{id:"f",text:"Not really — I don't tend to get stuck on things",tags:["baseline"],n:true}]},
+{id:"q11",th:"Sensory",text:"Does your environment affect how you feel more than it seems to for most people?",multi:false,opts:[{id:"a",text:"Yes — noise especially. Certain sounds feel physically unbearable",tags:["noise","sensory","autism"]},{id:"b",text:"Yes — crowds, bright lights, busy spaces drain me fast",tags:["overstimulation","autism"]},{id:"c",text:"Textures, smells, food — I have strong reactions others find baffling",tags:["tactile","autism"]},{id:"d",text:"I get overwhelmed but I'm never sure if it's sensory or emotional",tags:["sensory_emotional"]},{id:"e",text:"Not particularly — I adapt to most environments fine",tags:["baseline"],n:true}]},
+{id:"q12",th:"Daily life",text:"Which of these causes you the most grief regularly?",multi:true,max:2,opts:[{id:"a",text:"Time — always late, always miscalculating how long things take",tags:["time_blindness","adhd"]},{id:"b",text:"Starting — can't get going even when I desperately want to",tags:["task_initiation","adhd"]},{id:"c",text:"Money — impulse spending, forgetting bills, financial chaos",tags:["impulse","adhd"]},{id:"d",text:"Admin — emails, forms, appointments pile up into an overwhelming wall",tags:["admin","executive_function"]},{id:"e",text:"Sleep — can't wind down, can't wake up, body ignores schedules",tags:["sleep","circadian"]},{id:"f",text:"Eating — I forget, I hyperfocus through meals, or I emotionally eat",tags:["interoception"]},{id:"g",text:"My space — I want it tidy but genuinely can't maintain it",tags:["environment","executive_function"]},{id:"h",text:"Honestly none of these are major issues for me",tags:["baseline"],n:true}]},
+{id:"q13",th:"Support style",text:"When you're struggling, what do you actually want?",multi:false,opts:[{id:"a",text:"To understand what's happening in my brain — explain it to me",tags:["psychoeducation"]},{id:"b",text:"Something to do right now that actually helps in the moment",tags:["immediate_tools"]},{id:"c",text:"To get thoughts out of my head without anyone judging them",tags:["journalling"]},{id:"d",text:"To know what professional help exists and how to find it",tags:["signposting"]},{id:"e",text:"To feel less alone — knowing others experience this too",tags:["community"]},{id:"f",text:"To be distracted — sometimes I don't want to process, I want out",tags:["distraction"]},{id:"g",text:"I usually manage okay — I'm more here out of curiosity",tags:["baseline"],n:true}]},
+{id:"q14",th:"Good days",text:"Last one. On a genuinely good day — what does that look like for you?",multi:false,opts:[{id:"a",text:"I get something done that I've been avoiding. Even one thing.",tags:["achievement"]},{id:"b",text:"I feel like myself — not the performed version",tags:["authenticity"]},{id:"c",text:"I manage to be present with someone I care about without overthinking",tags:["relational_peace"]},{id:"d",text:"I'm not in my head. I'm just here.",tags:["grounding"]},{id:"e",text:"I feel like my brain is an asset, not an obstacle",tags:["empowerment"]},{id:"f",text:"Honestly a good day is just one where nothing goes badly wrong",tags:["survival"]},{id:"g",text:"Most days are genuinely good — I'm here to understand myself better",tags:["baseline","curiosity"],n:true}]}
+];
+
+function buildProfile(ans){const tags={};Object.entries(ans).forEach(([qId,sel])=>{const q=QQ.find(x=>x.id===qId);if(!q)return;(Array.isArray(sel)?sel:[sel]).forEach(oid=>{const o=q.opts.find(x=>x.id===oid);if(o)o.tags.forEach(t=>{tags[t]=(tags[t]||0)+1})})});return{tags,answers:ans,completedAt:new Date().toISOString()}}
+
+async function genMirror(profile,ans){const summary=[];Object.entries(ans).forEach(([qId,sel])=>{const q=QQ.find(x=>x.id===qId);if(!q)return;const texts=(Array.isArray(sel)?sel:[sel]).map(oid=>q.opts.find(x=>x.id===oid)?.text).filter(Boolean);summary.push(q.text+"\n→ "+texts.join(", "))});
+try{const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:"You are writing a deeply personal mirror report for someone who just completed an onboarding quiz for a neurodivergent support app. NOT a clinical assessment — a piece of writing that makes them feel genuinely seen.\n\nTheir answers:\n"+summary.join("\n\n")+"\n\nWrite 3-4 short paragraphs in second person, present tense. Rules:\n- Every sentence must describe a SPECIFIC private experience, not a general trait\n- No diagnosis names, no clinical language, no labels\n- No positivity platitudes — be honest, warm, specific\n- End with one line about what this space is for them\n- Keep it under 250 words, plain text only, paragraphs separated by blank lines"}]})});const data=await r.json();let rpt="";if(data.content)data.content.forEach(b=>{if(b.type==="text")rpt+=b.text});return rpt||null}catch{return null}}
+
+/* ═══ QUIZ SCREEN ═══ */
+function QuizScreen({onComplete}){
+const[step,setStep]=useState("welcome");const[qi,setQi]=useState(0);const[ans,setAns]=useState({});const[mirror,setMirror]=useState(null);const[fade,setFade]=useState(false);
+const go=()=>{setFade(true);setTimeout(()=>{if(step==="welcome"){setStep("quiz");setQi(0)}else if(qi<QQ.length-1)setQi(qi+1);else{setStep("gen");const p=buildProfile(ans);ss("profile",p);genMirror(p,ans).then(r=>{setMirror(r);ss("mirror",r);setStep("mirror")}).catch(()=>setStep("mirror"))}setFade(false)},300)};
+const sel=(qId,oid,multi,mx)=>{if(multi){const c=ans[qId]||[];const has=c.includes(oid);let n=has?c.filter(x=>x!==oid):[...c,oid];if(!has&&mx&&n.length>mx)n=n.slice(1);setAns({...ans,[qId]:n})}else{setAns({...ans,[qId]:oid});setTimeout(go,350)}};
+
+if(step==="welcome")return <div style={{height:"100dvh",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",padding:"40px 28px",background:"linear-gradient(180deg,#18160f 0%,#111115 50%)",opacity:fade?.2:1,transition:"opacity .3s"}}>
+<div style={{fontSize:13,fontWeight:600,color:"var(--accent)",letterSpacing:2,marginBottom:36,fontFamily:"var(--fh)"}}>NEUROPLANNER</div>
+<div style={{fontSize:30,fontWeight:700,fontFamily:"var(--fh)",textAlign:"center",lineHeight:1.35,marginBottom:28,whiteSpace:"pre-line"}}>{QO.headline}</div>
+{QO.body.map((p,i)=><p key={i} style={{fontSize:15,color:"var(--t2)",lineHeight:1.8,textAlign:"center",maxWidth:380,marginBottom:14,animation:`fadeUp .5s ease ${.2+i*.15}s both`}}>{p}</p>)}
+<button onClick={go} style={{marginTop:32,padding:"16px 48px",background:"var(--accent)",borderRadius:14,color:"#111",fontWeight:700,fontSize:16,fontFamily:"var(--fh)",boxShadow:"0 4px 24px rgba(200,169,110,.3)",animation:"fadeUp .5s ease .8s both"}}>{QO.cta}</button>
+</div>;
+
+if(step==="gen")return <div style={{height:"100dvh",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",padding:40,background:"var(--bg)"}}>
+<div style={{width:48,height:48,borderRadius:"50%",border:"3px solid var(--bdr)",borderTopColor:"var(--lilac)",animation:"spin 1s linear infinite",marginBottom:24}}/>
+<div style={{fontSize:16,fontWeight:600,color:"var(--t2)",fontFamily:"var(--fh)"}}>Getting to know you...</div>
+</div>;
+
+if(step==="mirror")return <div style={{height:"100dvh",display:"flex",flexDirection:"column",background:"var(--bg)",overflow:"auto"}}>
+<div style={{flex:1,display:"flex",flexDirection:"column",justifyContent:"center",padding:"40px 24px",maxWidth:500,margin:"0 auto"}}>
+<div style={{fontSize:12,fontWeight:600,color:"var(--lilac)",letterSpacing:2,marginBottom:20,fontFamily:"var(--fh)",animation:"fadeUp .6s ease both"}}>YOUR MIRROR</div>
+<div style={{fontSize:14,color:"var(--t3)",lineHeight:1.8,marginBottom:24,fontStyle:"italic",animation:"fadeUp .6s ease .2s both"}}>Here's what we heard. Read this slowly — it was written for you.</div>
+{mirror?mirror.split("\n\n").filter(Boolean).map((p,i)=><p key={i} style={{fontSize:15,color:"var(--t1)",lineHeight:2,marginBottom:20,animation:`fadeUp .6s ease ${.4+i*.2}s both`}}>{p}</p>):<p style={{fontSize:15,color:"var(--t2)",lineHeight:2,animation:"fadeUp .6s ease .4s both"}}>We couldn't generate your mirror right now, but your profile has been saved. The app will learn more about you as you use it.</p>}
+<div style={{marginTop:20,paddingTop:16,borderTop:"1px solid var(--bdr)",animation:`fadeUp .6s ease ${mirror?1.2:.8}s both`}}>
+<p style={{fontSize:14,color:"var(--t2)",lineHeight:1.7,marginBottom:24}}>This is just the beginning. The more you use it, the more honest you are with it, the more it shapes itself around you.</p>
+<button onClick={()=>onComplete(buildProfile(ans))} style={{width:"100%",padding:"16px",background:"var(--accent)",borderRadius:14,color:"#111",fontWeight:700,fontSize:16,fontFamily:"var(--fh)",boxShadow:"0 4px 24px rgba(200,169,110,.3)"}}>Show me my space</button>
+</div></div></div>;
+
+const q=QQ[qi];const s=ans[q.id];const has=q.multi?(s&&s.length>0):!!s;
+return <div style={{height:"100dvh",display:"flex",flexDirection:"column",background:"var(--bg)",opacity:fade?.2:1,transition:"opacity .3s"}}>
+<div style={{padding:"16px 20px 0",flexShrink:0}}>
+<div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}><span style={{fontSize:12,fontWeight:600,color:"var(--t3)",fontFamily:"var(--fh)"}}>{qi+1} / {QQ.length}</span><span style={{fontSize:11,color:"var(--t4)"}}>{q.th}</span></div>
+<div style={{height:3,background:"var(--bdr)",borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:((qi+1)/QQ.length*100)+"%",background:"var(--accent)",borderRadius:2,transition:"width .4s"}}/></div>
+</div>
+<div style={{flex:1,display:"flex",flexDirection:"column",justifyContent:"center",padding:"24px 20px",overflow:"auto"}}>
+<div style={{fontSize:21,fontWeight:700,fontFamily:"var(--fh)",lineHeight:1.4,marginBottom:8,animation:"fadeUp .3s ease both"}}>{q.text}</div>
+{q.multi&&<div style={{fontSize:12,color:"var(--t3)",marginBottom:16}}>Pick up to {q.max||3}</div>}
+<div style={{display:"flex",flexDirection:"column",gap:8,marginTop:8}}>
+{q.opts.map((o,oi)=>{const on=q.multi?(s||[]).includes(o.id):s===o.id;return <button key={o.id} onClick={()=>sel(q.id,o.id,q.multi,q.max)} style={{textAlign:"left",padding:"14px 18px",borderRadius:14,fontSize:14,fontWeight:on?600:400,lineHeight:1.5,color:on?"var(--t1)":"var(--t2)",background:on?(o.n?"var(--card2)":"var(--accent)")+"18":"var(--card)",border:"2px solid "+(on?(o.n?"var(--t3)":"var(--accent)"):"var(--bdr)"),transition:"all .2s",animation:`fadeUp .25s ease ${oi*.04}s both`}}>{o.text}</button>})}
+</div></div>
+<div style={{padding:"12px 20px calc(12px + env(safe-area-inset-bottom))",display:"flex",gap:10,flexShrink:0}}>
+{qi>0&&<button onClick={()=>{setFade(true);setTimeout(()=>{setQi(qi-1);setFade(false)},300)}} style={{flex:1,padding:14,background:"var(--card)",borderRadius:12,color:"var(--t3)",fontWeight:600}}>Back</button>}
+{q.multi&&<button onClick={go} disabled={!has} style={{flex:2,padding:14,background:has?"var(--accent)":"var(--bdr)",borderRadius:12,color:has?"#111":"var(--t4)",fontWeight:700,opacity:has?1:.5}}>Next</button>}
+</div></div>}
+
+/* ═══ SHARED COMPONENTS ═══ */
+function Toast({msg,color}){if(!msg)return null;return <div style={{position:"fixed",top:20,left:"50%",transform:"translateX(-50%)",padding:"12px 24px",borderRadius:14,fontWeight:700,fontSize:14,zIndex:3000,color:"#fff",background:color||"var(--accent)",boxShadow:"0 8px 32px rgba(0,0,0,.4)",animation:"slideDown .3s ease",pointerEvents:"none"}}>{msg}</div>}
+function Confetti(){const cols=["#6ec898","#c8a96e","#5ab8b2","#9888c8","#d08878","#6898d0"];return <div style={{position:"fixed",inset:0,zIndex:2500,pointerEvents:"none",overflow:"hidden"}}>{Array.from({length:35}).map((_,i)=><div key={i} style={{position:"absolute",left:Math.random()*100+"%",top:-10,width:8,height:8,borderRadius:Math.random()>.5?"50%":"2px",background:cols[i%cols.length],animation:`confetti ${1.5+Math.random()*2}s ease-in forwards`,animationDelay:Math.random()*.5+"s"}}/>)}</div>}
+function Sheet({onClose,children,title}){return <div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",flexDirection:"column",justifyContent:"flex-end",animation:"fadeIn .2s ease"}}><div onClick={onClose} style={{flex:1,background:"rgba(0,0,0,.5)",backdropFilter:"blur(4px)"}}/><div style={{background:"var(--card)",borderRadius:"24px 24px 0 0",padding:"20px 16px calc(20px + env(safe-area-inset-bottom))",maxHeight:"80dvh",overflowY:"auto",animation:"slideUp .3s ease"}}>{title&&<div style={{fontSize:18,fontWeight:700,fontFamily:"var(--fh)",marginBottom:14}}>{title}</div>}{children}</div></div>}
+
+function CatPanel({catKey,tasks,date,onAdd,rec}){const[open,setOpen]=useState(false);const cat=CAT[catKey],items=cat.t,cc=CC[catKey];const added=new Set(tasks.filter(t=>t.date===date).map(t=>t.text));
+return <div style={{background:"var(--card)",borderRadius:14,marginBottom:8,overflow:"hidden",border:"1px solid var(--bdr)",borderLeft:rec?"3px solid "+cc:"1px solid var(--bdr)"}}>
+<button onClick={()=>setOpen(!open)} style={{width:"100%",display:"flex",alignItems:"center",gap:10,padding:"14px 16px",textAlign:"left",color:"var(--t1)"}}>
+<span style={{width:4,height:20,borderRadius:2,background:cc,flexShrink:0}}/><span style={{flex:1,fontSize:14,fontWeight:700}}>{cat.l}</span>
+{rec&&<span style={{fontSize:10,fontWeight:700,color:"var(--accent)",background:"var(--accent)"+"15",padding:"3px 8px",borderRadius:6}}>Suggested</span>}
+<span style={{fontSize:12,color:"var(--t4)"}}>{items.length}</span><span style={{color:"var(--t4)",transform:open?"rotate(90deg)":"",transition:"transform .2s",display:"inline-flex"}}><Ic n="chevR" s={14} c="var(--t4)"/></span>
+</button>
+{open&&<div style={{padding:"0 14px 14px",animation:"fadeIn .2s"}}>
+<div style={{display:"flex",flexWrap:"wrap",gap:6}}>{items.map(([task,mins])=>{const isA=added.has(task);return <button key={task} onClick={()=>!isA&&onAdd(task,catKey,mins)} style={{borderRadius:10,padding:"8px 14px",fontSize:13,fontWeight:isA?600:500,border:"1.5px solid "+(isA?"var(--green)"+"40":"var(--bdr)"),background:isA?"var(--green)"+"08":"var(--card2)",color:isA?"var(--green)":"var(--t2)",display:"inline-flex",alignItems:"center",gap:5,opacity:isA?.5:1}}>{isA&&<Ic n="check" s={12} c="var(--green)"/>}{task}{!isA&&<span style={{fontSize:11,color:"var(--t4)"}}>{fM(mins)}</span>}</button>})}</div></div>}
+</div>}
+
+function TaskBlock({task,onToggle,onDelete,onFocus,i}){const cc=CC[task.cat]||CC.selfcare;
+return <div style={{display:"flex",alignItems:"stretch",borderRadius:14,background:"var(--card)",boxShadow:"var(--shadow)",marginBottom:8,opacity:task.done?.45:1,transition:"all .3s",animation:`fadeUp .3s ease ${(i||0)*.04}s both`}}>
+<div style={{width:4,background:cc,flexShrink:0,borderRadius:"14px 0 0 14px"}}/>
+<div style={{flex:1,display:"flex",alignItems:"center",gap:12,padding:"14px 16px"}}>
+<button onClick={()=>onToggle(task.id)} style={{width:30,height:30,borderRadius:10,border:"2.5px solid "+(task.done?"var(--green)":"var(--t4)"),background:task.done?"var(--green)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all .2s"}}>{task.done&&<span style={{animation:"pop .3s ease"}}><Ic n="check" s={14} c="#111"/></span>}</button>
+<div style={{flex:1,minWidth:0}}><div style={{fontSize:15,fontWeight:task.done?400:600,color:task.done?"var(--t3)":"var(--t1)",textDecoration:task.done?"line-through":"none",lineHeight:1.3}}>{task.text}</div><div style={{fontSize:12,color:"var(--t3)",marginTop:3}}>{fM(task.mins||15)}{task.rolledOver&&!task.done?" · carried over":""}</div></div>
+<div style={{display:"flex",gap:4,alignItems:"center",flexShrink:0}}>{!task.done&&(task.mins||15)>=10&&<button onClick={()=>onFocus(task)} style={{fontSize:11,fontWeight:700,color:"var(--green)",background:"var(--green)"+"12",border:"1px solid var(--green)"+"20",borderRadius:8,padding:"6px 10px"}}>Focus</button>}<button onClick={()=>onDelete(task.id)} style={{color:"var(--t4)",padding:6}}><Ic n="x" s={14}/></button></div>
+</div></div>}
+
+function TimerScreen({task,onDone,onStop}){const[rem,setRem]=useState(Math.min(task.mins||25,60)*60);
+useEffect(()=>{const iv=setInterval(()=>setRem(p=>{if(p<=1){clearInterval(iv);setTimeout(onDone,100);return 0}return p-1}),1000);return()=>clearInterval(iv)},[]);
+const m=Math.floor(rem/60),s=rem%60,total=Math.min(task.mins||25,60)*60,pct=((total-rem)/total*100);
+return <div style={{position:"fixed",inset:0,background:"var(--bg)",zIndex:1200,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:28}}>
+<div style={{fontSize:12,fontWeight:700,color:"var(--t3)",letterSpacing:2,fontFamily:"var(--fh)"}}>FOCUS MODE</div>
+<div style={{position:"relative",width:200,height:200,margin:"20px 0"}}>
+<svg width="200" height="200" viewBox="0 0 200 200"><circle cx="100" cy="100" r="88" fill="none" stroke="var(--bdr)" strokeWidth="6"/><circle cx="100" cy="100" r="88" fill="none" stroke="var(--green)" strokeWidth="6" strokeDasharray="553" strokeDashoffset={553-Math.round(pct/100*553)} strokeLinecap="round" transform="rotate(-90 100 100)" style={{transition:"stroke-dashoffset 1s linear"}}/></svg>
+<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:52,fontWeight:800,fontFamily:"var(--fh)",fontVariantNumeric:"tabular-nums"}}>{String(m).padStart(2,"0")}:{String(s).padStart(2,"0")}</span></div>
+</div>
+<div style={{fontSize:17,fontWeight:600,color:"var(--t2)",textAlign:"center",maxWidth:300}}>{task.text}</div>
+<div style={{fontSize:13,color:"var(--t4)"}}>Phone down. Just this one thing.</div>
+<div style={{display:"flex",gap:12,marginTop:24}}>
+<button onClick={onDone} style={{padding:"16px 32px",background:"var(--green)",borderRadius:14,color:"#111",fontWeight:700,fontSize:16}}>Done early</button>
+<button onClick={onStop} style={{padding:"16px 28px",background:"var(--card)",borderRadius:14,color:"var(--t3)",fontWeight:600}}>Stop</button>
+</div></div>}
+
+function CrisisMode({onClose}){const[step,setStep]=useState(0);const steps=[{t:"Breathe",d:"In for 4... hold for 4... out for 4...",c:"var(--teal)"},{t:"Ground yourself",d:"Name 5 things you can see. 4 you can touch. 3 you can hear. 2 you can smell. 1 you can taste.",c:"var(--lilac)"},{t:"Remind yourself",d:"This feeling is temporary. You've survived every hard moment before this one.",c:"var(--accent)"},{t:"One small thing",d:"Water? Fresh air? Sit down? Talk to someone? Pick one.",c:"var(--green)"}];const s=steps[step];
+return <div style={{position:"fixed",inset:0,zIndex:2000,background:"var(--bg)",display:"flex",flexDirection:"column",padding:28,animation:"fadeIn .3s"}}>
+<button onClick={onClose} style={{alignSelf:"flex-end",padding:8,color:"var(--t3)"}}><Ic n="x" s={22}/></button>
+<div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",gap:20}}>
+<div style={{width:80,height:80,borderRadius:"50%",background:s.c+"15",border:"2px solid "+s.c+"30",display:"flex",alignItems:"center",justifyContent:"center",animation:step===0?"breathe 4s ease infinite":"none"}}><div style={{width:24,height:24,borderRadius:"50%",background:s.c}}/></div>
+<div style={{fontSize:24,fontWeight:700,fontFamily:"var(--fh)",color:s.c}}>{s.t}</div>
+<div style={{fontSize:16,color:"var(--t2)",lineHeight:1.8,maxWidth:340}}>{s.d}</div>
+</div>
+<div style={{display:"flex",gap:10}}>{step>0&&<button onClick={()=>setStep(step-1)} style={{flex:1,padding:16,background:"var(--card)",borderRadius:14,color:"var(--t3)",fontWeight:600}}>Back</button>}{step<steps.length-1?<button onClick={()=>setStep(step+1)} style={{flex:2,padding:16,background:s.c,borderRadius:14,color:"#111",fontWeight:700}}>Next</button>:<button onClick={onClose} style={{flex:2,padding:16,background:"var(--green)",borderRadius:14,color:"#111",fontWeight:700}}>I'm okay</button>}</div></div>}
+
+/* ═══ MAIN APP ═══ */
+function App(){
+const[quizDone,setQuizDone]=useState(()=>!!ls("profile",null));
+const[tasks,setTasks]=useState(()=>ls("tasks",[]));const[tab,setTab]=useState("plan");const[date,setDate]=useState(TD());
+const[energy,setEnergy]=useState(()=>ls("energy",{}));const[dayMode,setDayMode]=useState(()=>ls("dayMode",{}));
+const[moods,setMoods]=useState(()=>ls("moods",{}));const[moodLog,setMoodLog]=useState(()=>ls("moodLog",{}));
+const[checkins,setCheckins]=useState(()=>ls("checkins",{}));const[spending,setSpending]=useState(()=>ls("spending",{budget:20,items:[]}));
+const[recurring,setRecurring]=useState(()=>ls("recurring",RDEF));const[rolled,setRolled]=useState(()=>ls("rolled",""));
+const[pendRoll,setPendRoll]=useState(null);const[toastMsg,setToastMsg]=useState(null);const[picker,setPicker]=useState(null);
+const[timer,setTimer]=useState(null);const[dark,setDark]=useState(()=>ls("dark",true));const[notifs,setNotifs]=useState(()=>ls("notifs",false));
+const[showAddRec,setShowAddRec]=useState(false);const[showCrisis,setShowCrisis]=useState(false);
+const[paralysis,setParalysis]=useState(false);const[confetti,setConfetti]=useState(false);
+const[socialBat,setSocialBat]=useState(()=>ls("socialBat",{}));const[medLog,setMedLog]=useState(()=>ls("medLog",{}));
+const[spendD,setSpendD]=useState("");const[spendA,setSpendA]=useState("");
+const streaks=useMemo(()=>calcStreaks(tasks),[tasks]);
+
+useEffect(()=>{ss("tasks",tasks)},[tasks]);useEffect(()=>{ss("energy",energy)},[energy]);useEffect(()=>{ss("dayMode",dayMode)},[dayMode]);
+useEffect(()=>{ss("moods",moods)},[moods]);useEffect(()=>{ss("moodLog",moodLog)},[moodLog]);useEffect(()=>{ss("checkins",checkins)},[checkins]);
+useEffect(()=>{ss("spending",spending)},[spending]);useEffect(()=>{ss("recurring",recurring)},[recurring]);useEffect(()=>{ss("rolled",rolled)},[rolled]);
+useEffect(()=>{ss("dark",dark);document.documentElement.className=dark?"":"light"},[dark]);useEffect(()=>{ss("notifs",notifs)},[notifs]);
+useEffect(()=>{ss("socialBat",socialBat)},[socialBat]);useEffect(()=>{ss("medLog",medLog)},[medLog]);
+
+useEffect(()=>{document.documentElement.className=dark?"":"light";const td=TD();if(rolled===td)return;const y=new Date();y.setDate(y.getDate()-1);const ys=y.toISOString().split("T")[0];const inc=tasks.filter(t=>t.date===ys&&!t.done);if(inc.length>0)setPendRoll(inc);const dow=new Date().getDay(),adj=dow===0?6:dow-1;const have=new Set(tasks.filter(t=>t.date===td).map(t=>t.text));const nr=[];recurring.forEach(r=>{if(r.days.includes(adj)&&!have.has(r.text))nr.push({id:uid(),text:r.text,done:false,cat:r.cat,date:td,rolledOver:false,block:r.block,mins:r.mins||15})});if(nr.length)setTasks(p=>[...p,...nr]);setRolled(td);if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{})},[]);
+
+// Notification scheduling
+useEffect(()=>{if(!notifs||!("serviceWorker"in navigator))return;
+navigator.serviceWorker.ready.then(reg=>{
+const td=TD();const now=Date.now();const todayBase=new Date();todayBase.setHours(0,0,0,0);const ns=[];
+// Block reminders: morning 8am, afternoon 12pm, evening 5pm
+const blockTimes={morning:8,afternoon:12,evening:17};
+Object.entries(blockTimes).forEach(([block,hour])=>{const bt=tasks.filter(t=>t.date===td&&t.block===block&&!t.done);if(!bt.length)return;
+const t=new Date(todayBase);t.setHours(hour,0,0,0);
+if(t.getTime()>now)ns.push({time:t.getTime(),title:block.charAt(0).toUpperCase()+block.slice(1)+" tasks",body:bt.length+" task"+(bt.length>1?"s":"")+": "+bt[0].text+(bt.length>1?" + more":""),tag:"block-"+block,action:"today"})});
+// Inactivity nudge: if no tasks done by 11am
+const undone=tasks.filter(t=>t.date===td&&!t.done);
+if(undone.length>0){const nudge=new Date(todayBase);nudge.setHours(11,0,0,0);if(nudge.getTime()>now){const doneCount=tasks.filter(t=>t.date===td&&t.done).length;if(doneCount===0)ns.push({time:nudge.getTime(),title:"Haven't started yet?",body:"That's okay. Pick one small thing. Just one.",tag:"nudge",action:"today"})}}
+// Hydration check: 2pm
+const hydrate=new Date(todayBase);hydrate.setHours(14,0,0,0);
+if(hydrate.getTime()>now)ns.push({time:hydrate.getTime(),title:"Body check",body:"Have you had water? Eaten? Moved? Quick check-in with yourself.",tag:"hydration",action:"life"});
+// Wind-down: 9:30pm
+const wind=new Date(todayBase);wind.setHours(21,30,0,0);
+if(wind.getTime()>now)ns.push({time:wind.getTime(),title:"Time to wind down",body:"Start your shutdown routine. Tomorrow's plan can wait.",tag:"winddown",action:"life"});
+// Meds reminder: check recurring for meds, fire at 8:15am if not done
+const medTask=tasks.find(t=>t.date===td&&t.text.toLowerCase().includes("meds")&&!t.done);
+if(medTask){const medTime=new Date(todayBase);medTime.setHours(8,15,0,0);if(medTime.getTime()>now)ns.push({time:medTime.getTime(),title:"Take your meds",body:"Morning reminder — don't forget.",tag:"meds",action:"today"})}
+// Badge: remaining tasks
+if(reg.active){reg.active.postMessage({type:"SET_BADGE",count:undone.length});
+if(ns.length)reg.active.postMessage({type:"SCHEDULE_NOTIFICATIONS",notifications:ns})}
+})},[notifs,tasks]);
+// Listen for notification click actions
+useEffect(()=>{if(!("serviceWorker"in navigator))return;const handler=e=>{if(e.data?.type==="NOTIFICATION_ACTION"){const action=e.data.action;if(action==="today")setTab("today");else if(action==="life")setTab("life")}};navigator.serviceWorker.addEventListener("message",handler);return()=>navigator.serviceWorker.removeEventListener("message",handler)},[]);
+
+const toast=useCallback((m,c)=>{setToastMsg({msg:m,color:c||"var(--accent)"});setTimeout(()=>setToastMsg(null),2000)},[]);
+const celebrate=useCallback(()=>{setConfetti(true);setTimeout(()=>setConfetti(false),3000)},[]);
+const addTask=(text,cat,mins,block)=>{setTasks(p=>[...p,{id:uid(),text,done:false,cat,date,rolledOver:false,block,mins}]);toast("Added!","var(--green)");setPicker(null)};
+const toggleTask=id=>{setTasks(p=>{const n=p.map(t=>t.id===id?{...t,done:!t.done}:t);if(n.filter(t=>t.date===date).every(t=>t.done)&&n.filter(t=>t.date===date).length>0)setTimeout(celebrate,300);return n});toast("Done!","var(--green)")};
+const deleteTask=id=>setTasks(p=>p.filter(t=>t.id!==id));
+
+const dayT=tasks.filter(t=>t.date===date),doneN=dayT.filter(t=>t.done).length,totalM=dayT.reduce((s,t)=>s+(t.mins||15),0),doneM=dayT.filter(t=>t.done).reduce((s,t)=>s+(t.mins||15),0),pct=dayT.length?Math.round(doneN/dayT.length*100):0,isToday=date===TD();
+const curE=energy[date]||0,curMd=dayMode[date]||"",mode=MODES.find(m=>m.k===curMd);
+const crd={background:"var(--card)",borderRadius:"var(--radius)",boxShadow:"var(--shadow)",padding:18,marginBottom:12};
+const sec={fontSize:11,fontWeight:700,color:"var(--t3)",letterSpacing:1,marginBottom:10,fontFamily:"var(--fh)"};
+const h=getHour();const topGrad=h<12?"linear-gradient(180deg,#1a1812 0%,var(--bg) 80px)":h<17?"linear-gradient(180deg,#12151a 0%,var(--bg) 80px)":"linear-gradient(180deg,#18121a 0%,var(--bg) 80px)";
+
+if(!quizDone)return <QuizScreen onComplete={p=>{ss("profile",p);setQuizDone(true)}}/>;
+
+if(pendRoll)return <div style={{background:"var(--bg)",minHeight:"100dvh",padding:"40px 20px",maxWidth:540,margin:"0 auto"}}>
+<div style={{fontSize:24,fontWeight:700,fontFamily:"var(--fh)",marginBottom:6}}>{getGreeting()}</div>
+<div style={{fontSize:14,color:"var(--t2)",marginBottom:24}}>You missed these yesterday. Carry any over?</div>
+{pendRoll.map((t,i)=>{const isS=tasks.some(x=>x.text===t.text&&x.date===TD()&&x.rolledOver);return <button key={t.id} onClick={()=>{if(!isS)setTasks(p=>[...p,{...t,id:uid(),date:TD(),rolledOver:true}])}} style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:16,background:isS?"var(--accent)12":"var(--card)",border:"2px solid "+(isS?"var(--accent)":"var(--bdr)"),borderRadius:14,marginBottom:8,textAlign:"left",animation:`fadeUp .3s ease ${i*.05}s both`}}>
+<div style={{width:28,height:28,borderRadius:10,border:"2.5px solid "+(isS?"var(--accent)":"var(--t4)"),background:isS?"var(--accent)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{isS&&<Ic n="check" s={14} c="#111"/>}</div>
+<div style={{flex:1}}><div style={{fontSize:15,fontWeight:600}}>{t.text}</div><div style={{fontSize:12,color:"var(--t3)",marginTop:2}}>{CAT[t.cat]?.l} · {fM(t.mins||15)}</div></div></button>})}
+<div style={{display:"flex",gap:10,marginTop:16}}><button onClick={()=>setPendRoll(null)} style={{flex:1,padding:16,background:"var(--accent)",borderRadius:14,color:"#111",fontWeight:700,fontFamily:"var(--fh)"}}>Done</button><button onClick={()=>setPendRoll(null)} style={{flex:1,padding:16,background:"var(--card)",borderRadius:14,color:"var(--t3)",fontWeight:600}}>Skip all</button></div></div>;
+
+if(timer)return <TimerScreen task={timer} onDone={()=>{toggleTask(timer.id);setTimer(null)}} onStop={()=>setTimer(null)}/>;
+
+return <div style={{display:"flex",flexDirection:"column",height:"100dvh",background:"var(--bg)"}}>
+{toastMsg&&<Toast msg={toastMsg.msg} color={toastMsg.color}/>}{confetti&&<Confetti/>}
+{picker&&<Sheet title="When?" onClose={()=>setPicker(null)}>
+<div style={{fontSize:14,color:"var(--t2)",marginBottom:16}}>{picker.text} · {fM(picker.mins)}</div>
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>{BLK.map(b=>{const used=dayT.filter(t=>t.block===b.key&&!t.done).reduce((s,t)=>s+(t.mins||15),0);const pc=b.cap<999?Math.min(100,Math.round(((used+picker.mins)/b.cap)*100)):0;const full=b.cap<999&&(used+picker.mins)>b.cap;
+return <button key={b.key} onClick={()=>addTask(picker.text,picker.cat,picker.mins,b.key)} style={{padding:16,background:"var(--bg2)",border:"2px solid "+(full?"var(--coral)":b.color),borderRadius:14,textAlign:"left",opacity:full?.4:1}}>
+<div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Ic n={b.ic} s={14} c={b.color}/><span style={{fontSize:15,fontWeight:700,color:b.color}}>{b.label}</span></div>
+{b.cap<999?<><div style={{height:4,background:"var(--bg)",borderRadius:2,overflow:"hidden",marginBottom:4}}><div style={{height:"100%",width:pc+"%",background:full?"var(--coral)":b.color,borderRadius:2}}/></div><div style={{fontSize:11,color:full?"var(--coral)":"var(--t3)",fontWeight:600}}>{fM(used)}/{fM(b.cap)}</div></>:<div style={{fontSize:11,color:"var(--t3)"}}>No limit</div>}
+</button>})}</div><button onClick={()=>setPicker(null)} style={{width:"100%",marginTop:14,padding:14,background:"var(--bg)",borderRadius:12,color:"var(--t3)",fontWeight:600}}>Cancel</button>
+</Sheet>}
+{showAddRec&&<Sheet title="New Auto Reminder" onClose={()=>setShowAddRec(false)}>
+<AddRecForm onAdd={r=>{setRecurring(p=>[...p,r]);setShowAddRec(false);toast("Added!","var(--green)")}} onClose={()=>setShowAddRec(false)}/>
+</Sheet>}
+{showCrisis&&<CrisisMode onClose={()=>setShowCrisis(false)}/>}
+
+<div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+<div style={{background:topGrad,minHeight:50}}/><div style={{maxWidth:540,margin:"-50px auto 0",padding:"0 16px 120px"}}>
+
+{tab==="plan"&&<><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
+<div><div style={{fontSize:24,fontWeight:700,fontFamily:"var(--fh)"}}>Plan Your Day</div><div style={{fontSize:13,color:"var(--t3)",marginTop:3}}>{fD(date)}</div></div>
+<div style={{display:"flex",gap:6}}><button onClick={()=>setDark(!dark)} style={{width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",background:"var(--card)",borderRadius:10,border:"1px solid var(--bdr)"}}><Ic n={dark?"sun":"moon"} s={16} c="var(--t3)"/></button>
+<button onClick={async()=>{if(!notifs){if("Notification"in window){const perm=await Notification.requestPermission();if(perm!=="granted"){toast("Notifications blocked — check browser settings","var(--coral)");return}}setNotifs(true);ss("notifs",true);toast("Notifications on!","var(--green)")}else{setNotifs(false);ss("notifs",false);toast("Off","var(--t3)")}}} style={{width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",background:notifs?"var(--green)15":"var(--card)",borderRadius:10,border:"1px solid "+(notifs?"var(--green)30":"var(--bdr)")}}><Ic n="bell" s={16} c={notifs?"var(--green)":"var(--t3)"}/></button></div></div>
+<div style={sec}>ENERGY LEVEL</div>
+<div style={{display:"flex",gap:8,marginBottom:24}}>{ENG.map(e=><button key={e.v} onClick={()=>setEnergy(p=>({...p,[date]:e.v}))} style={{flex:1,padding:"14px 8px",background:curE===e.v?e.c+"15":"var(--card)",border:"2px solid "+(curE===e.v?e.c:"var(--bdr)"),borderRadius:14,textAlign:"center",transition:"all .2s"}}><div style={{fontSize:20,marginBottom:4}}>{e.e}</div><div style={{fontSize:13,fontWeight:curE===e.v?700:500,color:curE===e.v?"var(--t1)":"var(--t3)"}}>{e.l}</div></button>)}</div>
+<div style={sec}>FOCUS FOR THE DAY</div>
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:24}}>{MODES.map(m=>{const bud=Math.round(m.max*(curE===3?1.2:curE===1?.6:1));const on=curMd===m.k;return <button key={m.k} onClick={()=>{setDayMode(p=>({...p,[date]:m.k}));setTab("pick")}} style={{borderRadius:16,padding:"16px 14px",background:on?"var(--accent)10":"var(--card)",boxShadow:"var(--shadow)",border:"2px solid "+(on?"var(--accent)":"var(--bdr)"),textAlign:"left",transition:"all .2s"}}>
+<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><span style={{fontSize:20}}>{m.e}</span><span style={{fontSize:11,color:"var(--t4)",fontWeight:600}}>~{fM(bud)}</span></div>
+<div style={{fontSize:14,fontWeight:700,color:on?"var(--accent)":"var(--t1)",marginBottom:3}}>{m.l}</div><div style={{fontSize:12,color:"var(--t3)",lineHeight:1.4}}>{m.d}</div></button>})}</div>
+{dayT.length>0&&<button onClick={()=>setTab("today")} style={{width:"100%",padding:16,background:"var(--accent)",borderRadius:14,color:"#111",fontWeight:700,fontSize:16,fontFamily:"var(--fh)",boxShadow:"0 4px 24px rgba(200,169,110,.2)"}}>View My Day ({dayT.length} tasks)</button>}
+</>}
+
+{tab==="pick"&&<><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{fontSize:22,fontWeight:700,fontFamily:"var(--fh)"}}>Pick Tasks</div><button onClick={()=>setTab("plan")} style={{color:"var(--t3)",fontWeight:600}}>Back</button></div>
+<div style={{fontSize:12,color:"var(--t2)",marginBottom:16}}>{mode?mode.l:"Custom"} · Tap to add</div>
+<div style={{display:"flex",gap:8,alignItems:"center",marginBottom:16,background:"var(--card)",borderRadius:14,padding:"10px 14px",border:"1px solid var(--bdr)"}}><input placeholder="Add your own..." onKeyDown={e=>{if(e.key==="Enter"&&e.target.value.trim()){setPicker({text:e.target.value.trim(),cat:gCat(e.target.value),mins:15});e.target.value=""}}} style={{flex:1,background:"none",border:"none",outline:"none",fontWeight:500,color:"var(--t1)"}}/><button onClick={e=>{const inp=e.target.closest("div").querySelector("input");if(inp?.value.trim()){setPicker({text:inp.value.trim(),cat:gCat(inp.value),mins:15});inp.value=""}}} style={{padding:"8px 16px",background:"var(--accent)",borderRadius:10,color:"#111",fontWeight:700,fontSize:14}}>Add</button></div>
+{mode&&<><div style={sec}>RECOMMENDED</div>{mode.cats.map(k=><CatPanel key={k} catKey={k} tasks={tasks} date={date} onAdd={(t,c,m)=>setPicker({text:t,cat:c,mins:m})} rec/>)}</>}
+{(()=>{const o=Object.keys(CAT).filter(k=>!mode?.cats?.includes(k));return o.length?<><div style={{...sec,marginTop:16}}>EVERYTHING ELSE</div>{o.map(k=><CatPanel key={k} catKey={k} tasks={tasks} date={date} onAdd={(t,c,m)=>setPicker({text:t,cat:c,mins:m})}/>)}</>:null})()}
+{dayT.length>0&&<button onClick={()=>setTab("today")} style={{width:"100%",marginTop:20,padding:16,background:"var(--accent)",borderRadius:14,color:"#111",fontWeight:700,fontSize:16,fontFamily:"var(--fh)",position:"sticky",bottom:16,boxShadow:"0 8px 32px rgba(0,0,0,.4)"}}>View My Day ({dayT.length} tasks)</button>}
+</>}
+
+{tab==="today"&&<><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+<div style={{display:"flex",alignItems:"center",gap:6}}><button onClick={()=>{const d=new Date(date+"T12:00:00");d.setDate(d.getDate()-1);setDate(d.toISOString().split("T")[0])}} style={{padding:8,color:"var(--t3)"}}><Ic n="chevL" s={18}/></button>
+<div><div style={{fontSize:22,fontWeight:700,fontFamily:"var(--fh)"}}>{fS(date)}</div><div style={{fontSize:12,color:"var(--t3)"}}>{fD(date)}</div></div>
+<button onClick={()=>{const d=new Date(date+"T12:00:00");d.setDate(d.getDate()+1);setDate(d.toISOString().split("T")[0])}} style={{padding:8,color:"var(--t3)"}}><Ic n="chevR" s={18}/></button>
+{!isToday&&<button onClick={()=>setDate(TD())} style={{padding:"5px 12px",borderRadius:8,fontSize:11,fontWeight:700,color:"var(--accent)",background:"var(--accent)15",marginLeft:4}}>Today</button>}</div>
+<div style={{display:"flex",gap:6}}><button onClick={()=>{const lines=["NeuroPlanner: "+fD(date),"",doneN+"/"+dayT.length+" done"];navigator.clipboard?.writeText(lines.join("\n")).then(()=>toast("Copied!"))}} style={{width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",background:"var(--card)",borderRadius:10,border:"1px solid var(--bdr)"}}><Ic n="share" s={14} c="var(--t3)"/></button>
+<button onClick={()=>exportICS(tasks,date)} style={{width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",background:"var(--card)",borderRadius:10,border:"1px solid var(--bdr)"}}><Ic n="cal" s={14} c="var(--t3)"/></button></div></div>
+
+<div style={{display:"flex",alignItems:"center",gap:18,marginBottom:18,animation:"fadeUp .3s ease both"}}>
+<svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="36" r="28" fill="none" stroke="var(--bdr)" strokeWidth="5"/><circle cx="36" cy="36" r="28" fill="none" stroke={pct===100?"var(--green)":pct>50?"var(--teal)":"var(--accent)"} strokeWidth="5" strokeDasharray="176" strokeDashoffset={176-Math.round(pct/100*176)} strokeLinecap="round" transform="rotate(-90 36 36)" style={{transition:"stroke-dashoffset .8s ease"}}/><text x="36" y="34" textAnchor="middle" fontSize="17" fontWeight="800" fill={pct===100?"var(--green)":pct>50?"var(--teal)":"var(--accent)"} fontFamily="Sora">{pct}%</text><text x="36" y="46" textAnchor="middle" fontSize="8" fontWeight="600" fill="var(--t3)" fontFamily="DM Sans">done</text></svg>
+<div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,marginBottom:3}}>{dayT.length===0?"Nothing planned":doneN===dayT.length&&dayT.length>0?"All done! 🎉":doneN+" of "+dayT.length+" done"}</div><div style={{fontSize:12,color:"var(--t2)"}}>{fM(doneM)} done, {fM(totalM-doneM)} left</div>
+{Object.entries(streaks).filter(([,v])=>v>0).length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:8}}>{Object.entries(streaks).filter(([,v])=>v>0).map(([n,c])=><span key={n} style={{display:"inline-flex",gap:3,padding:"3px 8px",borderRadius:8,fontSize:10,fontWeight:700,background:"var(--green)12",color:"var(--green)",border:"1px solid var(--green)20"}}>🔥{c}d {n.split(" ").slice(0,2).join(" ")}</span>)}</div>}</div></div>
+
+{dayT.length>3&&!paralysis&&doneN===0&&isToday&&<button onClick={()=>setParalysis(true)} style={{width:"100%",padding:14,background:"var(--lilac)12",border:"1px solid var(--lilac)25",borderRadius:14,marginBottom:12,textAlign:"left",display:"flex",alignItems:"center",gap:12}}><Ic n="zap" s={18} c="var(--lilac)"/><div><div style={{fontSize:14,fontWeight:700,color:"var(--lilac)"}}>Feeling stuck?</div><div style={{fontSize:12,color:"var(--t3)"}}>Hide everything except one task</div></div></button>}
+
+{paralysis?(()=>{const nx=dayT.find(t=>!t.done);if(!nx)return <div style={{textAlign:"center",padding:32}}><div style={{fontSize:18,fontWeight:700,color:"var(--green)",fontFamily:"var(--fh)"}}>You did it.</div><button onClick={()=>setParalysis(false)} style={{marginTop:16,padding:"12px 24px",background:"var(--card)",borderRadius:12,color:"var(--t2)",fontWeight:600}}>See full list</button></div>;
+return <div style={{animation:"fadeUp .4s ease both"}}><div style={{padding:24,background:"var(--lilac)08",border:"1px solid var(--lilac)20",borderRadius:18,textAlign:"center",marginBottom:12}}>
+<div style={{fontSize:12,fontWeight:700,color:"var(--lilac)",letterSpacing:1,marginBottom:12,fontFamily:"var(--fh)"}}>JUST THIS ONE THING</div>
+<div style={{fontSize:20,fontWeight:700,marginBottom:6}}>{nx.text}</div><div style={{fontSize:14,color:"var(--t3)"}}>{fM(nx.mins||15)}</div>
+<div style={{display:"flex",justifyContent:"center",gap:10,marginTop:20}}><button onClick={()=>toggleTask(nx.id)} style={{padding:"14px 32px",background:"var(--green)",borderRadius:14,color:"#111",fontWeight:700}}>Done</button>{(nx.mins||15)>=10&&<button onClick={()=>setTimer(nx)} style={{padding:"14px 24px",background:"var(--card)",borderRadius:14,color:"var(--t2)",fontWeight:600}}>Focus</button>}</div></div>
+<button onClick={()=>setParalysis(false)} style={{width:"100%",padding:12,color:"var(--t4)",fontSize:13}}>Show full list</button></div>})():<>
+
+{(()=>{const nx=dayT.find(t=>!t.done);if(!nx)return null;const cc=CC[nx.cat]||CC.selfcare;return <div style={{background:"var(--card)",borderRadius:14,padding:"14px 18px",marginBottom:14,display:"flex",alignItems:"center",gap:14,borderLeft:"4px solid "+cc,animation:"fadeUp .3s ease both"}}><div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:"var(--t3)",letterSpacing:1,fontFamily:"var(--fh)"}}>NEXT UP</div><div style={{fontSize:16,fontWeight:600,marginTop:2}}>{nx.text}</div></div><div style={{fontSize:13,color:"var(--t3)"}}>{fM(nx.mins||15)}</div>{(nx.mins||15)>=10&&<button onClick={()=>setTimer(nx)} style={{fontSize:12,fontWeight:700,color:"var(--green)",background:"var(--green)12",border:"1px solid var(--green)20",borderRadius:10,padding:"8px 12px"}}>Focus</button>}</div>})()}
+
+{dayT.length===0&&<div style={{textAlign:"center",padding:"48px 20px"}}><div style={{fontSize:18,fontWeight:700,color:"var(--t2)",fontFamily:"var(--fh)",marginBottom:10}}>Nothing planned yet</div><button onClick={()=>setTab("plan")} style={{padding:"14px 28px",background:"var(--accent)",borderRadius:14,color:"#111",fontWeight:700}}>Plan your day</button></div>}
+
+{BLK.map(bl=>{const bt=dayT.filter(t=>t.block===bl.key).sort((a,b)=>a.done===b.done?0:a.done?1:-1);if(!bt.length)return null;const bM=bt.reduce((s,t)=>s+(t.mins||15),0),bD=bt.filter(t=>t.done).reduce((s,t)=>s+(t.mins||15),0);
+return <div key={bl.key}><div style={{display:"flex",alignItems:"center",gap:10,padding:"16px 4px 8px"}}><div style={{width:8,height:8,borderRadius:"50%",background:bl.color}}/><span style={{fontSize:11,fontWeight:700,color:"var(--t3)",letterSpacing:1,fontFamily:"var(--fh)"}}>{bl.label.toUpperCase()}</span><span style={{fontSize:11,color:"var(--t3)"}}>{fM(bD)}/{fM(bM)}</span><div style={{flex:1,height:1,background:"var(--bdr)"}}/></div>{bt.map((t,i)=><TaskBlock key={t.id} task={t} onToggle={toggleTask} onDelete={deleteTask} onFocus={setTimer} i={i}/>)}</div>})}
+
+{doneN===dayT.length&&dayT.length>0&&<div style={{padding:28,borderRadius:18,textAlign:"center",background:"var(--green)10",marginTop:16,border:"1px solid var(--green)20",animation:"fadeUp .4s ease both"}}><div style={{fontSize:22,fontWeight:700,color:"var(--green)",fontFamily:"var(--fh)"}}>Everything done 🎉</div><div style={{fontSize:14,color:"var(--t2)",marginTop:4}}>You smashed it. Go rest.</div></div>}
+</>}
+</>}
+
+{tab==="life"&&<><div style={{fontSize:24,fontWeight:700,fontFamily:"var(--fh)",marginBottom:20}}>Life</div>
+<div style={crd}><div style={sec}>HOW ARE YOU RIGHT NOW?</div>
+<div style={{display:"flex",gap:6,marginBottom:12}}>{MDS.map(m=>{const on=moods[date]===m.v;return <button key={m.v} onClick={()=>{setMoods(p=>({...p,[date]:m.v}));const now=new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});setMoodLog(p=>({...p,[date]:[...(p[date]||[]),{v:m.v,time:now}]}));toast(m.l,"var(--teal)")}} style={{flex:1,padding:"10px 2px",borderRadius:12,textAlign:"center",background:on?m.c+"15":"var(--card2)",border:"2px solid "+(on?m.c:"var(--bdr)"),fontSize:12,fontWeight:on?700:500,color:on?m.c:"var(--t3)",transition:"all .2s"}}>{m.l}</button>})}</div>
+{moodLog[date]?.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{moodLog[date].map((m,i)=>{const md=MDS.find(x=>x.v===m.v);return <span key={i} style={{fontSize:10,fontWeight:600,color:md?.c,background:(md?.c||"#666")+"12",padding:"3px 8px",borderRadius:6}}>{m.time} · {md?.l}</span>})}</div>}</div>
+
+<div style={crd}><div style={sec}>JOURNAL</div>
+<textarea value={checkins[date]||""} onChange={e=>setCheckins(p=>({...p,[date]:e.target.value}))} placeholder="What's on your mind?" style={{width:"100%",minHeight:80,background:"var(--bg2)",border:"1px solid var(--bdr)",borderRadius:12,padding:14,outline:"none",fontSize:14,resize:"vertical",lineHeight:1.6}}/>
+<button onClick={()=>{const t=checkins[date];if(!t||t.length<5){toast("Write a bit more first");return}toast("Thinking...","var(--lilac)");fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,messages:[{role:"user",content:"I have ADHD. Respond warmly, briefly (2-3 sentences). Be a supportive friend. No platitudes. Be specific. Journal: "+t}]})}).then(r=>r.json()).then(d=>{let r="";if(d.content)d.content.forEach(b=>{if(b.type==="text")r+=b.text});if(r)setCheckins(p=>({...p,[date+"_ai"]:r}))}).catch(()=>toast("Could not connect","var(--coral)"))}} style={{marginTop:10,padding:"12px",background:"var(--lilac)15",border:"1px solid var(--lilac)25",borderRadius:12,color:"var(--lilac)",fontWeight:600,fontSize:13,width:"100%"}}>Reflect on this</button>
+{checkins[date+"_ai"]&&<div style={{marginTop:12,padding:14,background:"var(--lilac)08",borderRadius:12,border:"1px solid var(--lilac)15"}}><div style={{fontSize:10,fontWeight:700,color:"var(--lilac)",letterSpacing:1,marginBottom:6,fontFamily:"var(--fh)"}}>REFLECTION</div><div style={{fontSize:14,lineHeight:1.7}}>{checkins[date+"_ai"]}</div></div>}</div>
+
+<div style={crd}><div style={sec}>DAILY BUDGET</div>
+{(()=>{const bgt=spending.budget||20;const tI=(spending.items||[]).filter(i=>i.date===TD());const sp=tI.reduce((s,i)=>s+i.amount,0);const left=bgt-sp;return <>
+<div style={{fontSize:36,fontWeight:800,color:left<0?"var(--coral)":left<5?"var(--accent)":"var(--green)",fontFamily:"var(--fh)"}}>£{left.toFixed(2)}</div>
+<div style={{fontSize:12,color:"var(--t3)",marginBottom:10}}>of £{bgt} today</div>
+<div style={{display:"flex",gap:8,alignItems:"center",marginBottom:12}}><span style={{fontSize:12,fontWeight:600,color:"var(--t3)"}}>Limit:</span><input type="number" value={spending.budget||20} onChange={e=>setSpending(p=>({...p,budget:parseFloat(e.target.value)||0}))} style={{width:60,background:"var(--bg2)",border:"1px solid var(--bdr)",borderRadius:8,padding:"6px 8px",outline:"none",fontWeight:700,textAlign:"center",fontSize:14}}/></div>
+<div style={{display:"flex",gap:8,marginBottom:10}}><input value={spendD} onChange={e=>setSpendD(e.target.value)} placeholder="What for?" style={{flex:1,background:"var(--bg2)",border:"1px solid var(--bdr)",borderRadius:10,padding:10,outline:"none",fontSize:14}}/><input value={spendA} onChange={e=>setSpendA(e.target.value)} type="number" step="0.01" placeholder="£" style={{width:60,background:"var(--bg2)",border:"1px solid var(--bdr)",borderRadius:10,padding:10,outline:"none",fontSize:14}}/><button onClick={()=>{const a=parseFloat(spendA);if(isNaN(a)||a<=0)return;setSpending(p=>({...p,items:[...(p.items||[]),{amount:a,desc:spendD||"Something",date:TD(),id:uid()}]}));toast("-£"+a.toFixed(2),"var(--coral)");setSpendD("");setSpendA("")}} style={{background:"var(--accent)",borderRadius:10,padding:"10px 14px",color:"#111",fontWeight:800,fontSize:16}}>+</button></div>
+{tI.map(item=><div key={item.id} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--bdr)"}}><span style={{fontSize:13,color:"var(--t2)"}}>{item.desc}</span><span style={{fontSize:13,fontWeight:700,color:"var(--coral)"}}>-£{item.amount.toFixed(2)}</span></div>)}</>})()}</div>
+
+<div style={crd}><div style={sec}>MEDICATION</div>
+<button onClick={()=>setMedLog(p=>({...p,[date]:{...p[date],taken:!(p[date]?.taken)}}))} style={{padding:"10px 16px",background:medLog[date]?.taken?"var(--green)15":"var(--card2)",border:"1.5px solid "+(medLog[date]?.taken?"var(--green)":"var(--bdr)"),borderRadius:12,color:medLog[date]?.taken?"var(--green)":"var(--t3)",fontWeight:600,fontSize:13,display:"flex",alignItems:"center",gap:6,marginBottom:10}}>{medLog[date]?.taken&&<Ic n="check" s={14} c="var(--green)"/>}{medLog[date]?.taken?"Taken":"Not taken yet"}</button>
+<div style={{fontSize:12,color:"var(--t4)",marginBottom:6}}>How do you feel on meds today?</div>
+<div style={{display:"flex",gap:4}}>{[1,2,3,4,5].map(v=><button key={v} onClick={()=>setMedLog(p=>({...p,[date]:{...p[date],feelRating:v}}))} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:13,fontWeight:medLog[date]?.feelRating===v?700:400,background:medLog[date]?.feelRating===v?"var(--teal)15":"var(--card2)",border:"1.5px solid "+(medLog[date]?.feelRating===v?"var(--teal)":"var(--bdr)"),color:medLog[date]?.feelRating===v?"var(--teal)":"var(--t4)"}}>{v}</button>)}</div></div>
+
+<div style={crd}><div style={sec}>SOCIAL BATTERY</div>
+<div style={{display:"flex",gap:6}}>{["Alone","Low","Med","Social","Drained"].map((l,i)=>{const v=i+1;const on=socialBat[date]===v;const c=v<=2?"var(--green)":v===3?"var(--accent)":"var(--coral)";return <button key={l} onClick={()=>setSocialBat(p=>({...p,[date]:v}))} style={{flex:1,padding:"8px 4px",borderRadius:10,fontSize:11,fontWeight:on?700:500,background:on?c+"15":"var(--card2)",border:"1.5px solid "+(on?c:"var(--bdr)"),color:on?c:"var(--t4)"}}>{l}</button>})}</div></div>
+
+<div style={crd}><div style={sec}>STREAKS</div>{Object.entries(streaks).map(([n,c])=><div key={n} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid var(--bdr)"}}><span style={{fontSize:13,fontWeight:600}}>{n}</span><span style={{fontSize:14,fontWeight:800,color:c>0?"var(--green)":"var(--t4)"}}>{c>0?"🔥 "+c+" days":"—"}</span></div>)}</div>
+
+<div style={crd}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div style={sec}>AUTO REMINDERS</div><button onClick={()=>setShowAddRec(true)} style={{fontSize:11,fontWeight:700,color:"var(--accent)",padding:"4px 12px",background:"var(--accent)12",borderRadius:8,border:"1px solid var(--accent)20"}}>+ Add</button></div>
+{recurring.map(r=>{const bL=BLK.find(b=>b.key===r.block)?.label||"Anytime";return <div key={r.id||r.text} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid var(--bdr)"}}><span style={{width:4,height:18,borderRadius:2,background:CC[r.cat]||CC.selfcare,flexShrink:0}}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600}}>{r.text}</div><div style={{fontSize:11,color:"var(--t3)"}}>{bL} · {r.days.map(d=>WK[d]).join(", ")} · {fM(r.mins||15)}</div></div><button onClick={()=>setRecurring(p=>p.filter(x=>(x.id||x.text)!==(r.id||r.text)))} style={{color:"var(--t4)",padding:6}}><Ic n="x" s={14}/></button></div>})}</div>
+
+<div style={crd}><div style={sec}>DOOM SCROLL ALTERNATIVE</div><div style={{fontSize:14,lineHeight:1.7}}>{TIPS[Math.floor(Math.random()*TIPS.length)]}</div></div>
+</>}
+
+{tab==="insights"&&<InsightsView tasks={tasks} date={date} setDate={setDate} setTab={setTab} moods={moods}/>}
+
+</div></div>
+
+<button onClick={()=>setShowCrisis(true)} style={{position:"fixed",right:16,bottom:100,width:52,height:52,borderRadius:"50%",background:"var(--coral)",boxShadow:"0 4px 20px rgba(208,136,120,.35)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,animation:"breathe 3s ease infinite"}}><Ic n="heart" s={22} c="#fff"/></button>
+
+<div style={{display:"flex",background:"var(--card)",borderTop:"1px solid var(--bdr)",padding:"6px 8px calc(6px + env(safe-area-inset-bottom))",gap:2,flexShrink:0}}>
+{[{id:"plan",l:"Plan",ic:"plan"},{id:"pick",l:"Tasks",ic:"tasks"},{id:"today",l:"My Day",ic:"today"},{id:"life",l:"Life",ic:"life"},{id:"insights",l:"Insights",ic:"insights"}].map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"8px 0",borderRadius:12,fontSize:10,fontWeight:tab===t.id?700:500,color:tab===t.id?"var(--accent)":"var(--t4)",background:tab===t.id?"var(--accent)10":"transparent",display:"flex",flexDirection:"column",alignItems:"center",gap:3,transition:"all .2s",fontFamily:"var(--fh)"}}><Ic n={t.ic} s={18} c={tab===t.id?"var(--accent)":"var(--t4)"}/><span>{t.l}</span></button>)}
+</div></div>}
+
+function AddRecForm({onAdd,onClose}){const[t,setT]=useState("");const[b,setB]=useState("morning");const[d,setD]=useState([0,1,2,3,4,5,6]);const[m,setM]=useState(15);
+return <><input value={t} onChange={e=>setT(e.target.value)} placeholder="Task name..." style={{width:"100%",background:"var(--bg2)",border:"1px solid var(--bdr)",borderRadius:10,padding:12,outline:"none",fontSize:14,marginBottom:10}}/>
+<div style={{fontSize:11,fontWeight:700,color:"var(--t3)",letterSpacing:.5,marginBottom:6,fontFamily:"var(--fh)"}}>Duration</div>
+<div style={{display:"flex",gap:4,marginBottom:12,flexWrap:"wrap"}}>{[5,10,15,30,45,60].map(v=><button key={v} onClick={()=>setM(v)} style={{padding:"6px 12px",borderRadius:8,fontSize:12,fontWeight:600,background:m===v?"var(--accent)":"var(--card2)",color:m===v?"#111":"var(--t3)",border:"1px solid var(--bdr)"}}>{v}m</button>)}</div>
+<div style={{fontSize:11,fontWeight:700,color:"var(--t3)",letterSpacing:.5,marginBottom:6,fontFamily:"var(--fh)"}}>Time block</div>
+<div style={{display:"flex",gap:4,marginBottom:12}}>{BLK.map(bl=><button key={bl.key} onClick={()=>setB(bl.key)} style={{padding:"6px 12px",borderRadius:8,fontSize:12,fontWeight:600,background:b===bl.key?bl.color:"var(--card2)",color:b===bl.key?"#111":"var(--t3)",border:"1px solid var(--bdr)"}}>{bl.label}</button>)}</div>
+<div style={{fontSize:11,fontWeight:700,color:"var(--t3)",letterSpacing:.5,marginBottom:6,fontFamily:"var(--fh)"}}>Days</div>
+<div style={{display:"flex",gap:4,marginBottom:16}}>{WK.map((day,i)=><button key={day} onClick={()=>setD(p=>p.includes(i)?p.filter(x=>x!==i):[...p,i])} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:11,fontWeight:700,background:d.includes(i)?"var(--lilac)20":"var(--card2)",color:d.includes(i)?"var(--lilac)":"var(--t4)",border:"1px solid "+(d.includes(i)?"var(--lilac)30":"var(--bdr)")}}>{day}</button>)}</div>
+<button onClick={()=>{if(!t.trim())return;onAdd({text:t.trim(),cat:gCat(t),block:b,days:[...d],mins:m,id:uid()})}} style={{width:"100%",padding:14,background:t.trim()?"var(--accent)":"var(--bdr)",borderRadius:12,color:t.trim()?"#111":"var(--t4)",fontWeight:700}}>Add Reminder</button>
+<button onClick={onClose} style={{width:"100%",marginTop:8,padding:12,background:"var(--bg)",borderRadius:12,color:"var(--t3)",fontWeight:600}}>Cancel</button></>}
+
+function InsightsView({tasks,date,setDate,setTab,moods}){
+const wd=wkD(date);const cs={};Object.keys(CAT).forEach(k=>cs[k]={t:0,d:0});let tA=0,dA=0;
+wd.forEach(dt=>tasks.filter(t=>t.date===dt).forEach(t=>{const c=t.cat||"selfcare";if(cs[c]){cs[c].t++;if(t.done)cs[c].d++}tA++;if(t.done)dA++}));
+const wp=tA>0?Math.round(dA/tA*100):0;const wm=wd.map(d=>moods[d]).filter(Boolean);const avgM=wm.length?wm.reduce((s,m)=>s+m,0)/wm.length:null;
+const struggling=Object.entries(cs).filter(([,v])=>v.t>=3&&v.d/v.t<.4).map(([k])=>CAT[k].l);
+const strong=Object.entries(cs).filter(([,v])=>v.t>=2&&v.d/v.t>=.8).map(([k])=>CAT[k].l);
+const sec2={fontSize:11,fontWeight:700,color:"var(--t3)",letterSpacing:1,marginBottom:10,fontFamily:"var(--fh)"};
+const crd2={background:"var(--card)",borderRadius:"var(--radius)",boxShadow:"var(--shadow)",padding:18,marginBottom:12};
+return <><div style={{fontSize:24,fontWeight:700,fontFamily:"var(--fh)",marginBottom:16}}>This Week</div>
+<div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:5,marginBottom:18}}>
+{wd.map((dt,i)=>{const dts=tasks.filter(t=>t.date===dt),dn=dts.filter(t=>t.done).length,tot=dts.length;const on=dt===date;return <button key={dt} onClick={()=>{setDate(dt);setTab("today")}} style={{background:on?"var(--accent)12":"var(--card)",border:"1.5px solid "+(on?"var(--accent)30":"var(--bdr)"),borderRadius:12,padding:"8px 2px",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+<span style={{fontSize:10,fontWeight:700,color:on?"var(--accent)":"var(--t4)"}}>{WK[i]}</span><span style={{fontSize:17,fontWeight:800,color:on?"var(--t1)":"var(--t2)"}}>{new Date(dt+"T12:00:00").getDate()}</span>
+{tot>0?<span style={{fontSize:10,fontWeight:700,color:dn===tot?"var(--green)":"var(--t3)"}}>{dn}/{tot}</span>:<span style={{fontSize:10,color:"var(--t4)"}}>—</span>}
+{moods[dt]&&<span style={{width:6,height:6,borderRadius:"50%",background:MDS.find(m=>m.v===moods[dt])?.c||"var(--t4)"}}/>}</button>})}</div>
+<div style={{...crd2,textAlign:"center"}}><div style={{fontSize:48,fontWeight:800,color:wp>=70?"var(--green)":wp>=40?"var(--accent)":"var(--coral)",fontFamily:"var(--fh)"}}>{wp}%</div><div style={{fontSize:13,color:"var(--t2)"}}>{dA} of {tA} tasks this week</div></div>
+{avgM!==null&&<div style={{...crd2,textAlign:"center"}}><div style={{...sec2}}>AVERAGE MOOD</div><div style={{fontSize:22,fontWeight:800,color:MDS.find(m=>m.v===Math.round(avgM))?.c,marginTop:4}}>{MDS.find(m=>m.v===Math.round(avgM))?.l||"?"}</div></div>}
+<div style={crd2}><div style={sec2}>BY CATEGORY</div>
+{Object.entries(cs).filter(([,v])=>v.t>0).length===0?<div style={{fontSize:13,color:"var(--t4)"}}>No tasks this week yet</div>:
+Object.entries(cs).filter(([,v])=>v.t>0).map(([k,v])=>{const pc=Math.round(v.d/v.t*100);return <div key={k} style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+<span style={{width:4,height:16,borderRadius:2,background:CC[k],flexShrink:0}}/><span style={{fontSize:12,fontWeight:600,width:120}}>{CAT[k].l}</span>
+<div style={{flex:1,height:5,background:"var(--bg2)",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:pc+"%",background:CC[k],borderRadius:3,transition:"width .5s"}}/></div>
+<span style={{fontSize:11,fontWeight:700,color:CC[k],width:36,textAlign:"right"}}>{v.d}/{v.t}</span></div>})}</div>
+{struggling.length>0&&<div style={crd2}><div style={{...sec2,color:"var(--coral)"}}>FINDING THESE HARD</div><div style={{fontSize:14,fontWeight:600}}>{struggling.join(", ")}</div><div style={{fontSize:12,color:"var(--t3)",marginTop:4}}>Try fewer tasks or smaller steps.</div></div>}
+{strong.length>0&&<div style={crd2}><div style={{...sec2,color:"var(--green)"}}>STRENGTHS THIS WEEK</div><div style={{fontSize:14,fontWeight:600}}>{strong.join(", ")}</div></div>}
+{wm.length>=3&&<div style={crd2}><div style={sec2}>MOOD TREND</div><div style={{display:"flex",alignItems:"end",gap:4,height:60}}>{wd.map(dt=>{const mv=moods[dt];if(!mv)return <div key={dt} style={{flex:1,height:4,background:"var(--bdr)",borderRadius:2}}/>;return <div key={dt} style={{flex:1,height:(mv/5*100)+"%",background:MDS.find(m=>m.v===mv)?.c,borderRadius:4,transition:"height .3s",minHeight:4}}/>})}</div><div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>{wd.map((dt,i)=><span key={dt} style={{fontSize:9,color:"var(--t4)",flex:1,textAlign:"center"}}>{WK[i]}</span>)}</div></div>}
+</>}
+
+ReactDOM.render(<App/>,document.getElementById("root"));
+</script>
+</body>
+</html>
