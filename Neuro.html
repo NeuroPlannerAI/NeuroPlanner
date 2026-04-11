@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<!-- saved from url=(0232)file:///Users/kait_personal/Library/Application%20Support/Claude/local-agent-mode-sessions/123dbc9a-dcd0-47c9-9149-67c9d0656de0/064edd1e-5264-49f4-9ce7-ce276a14b0ae/local_ffb343f7-d2d9-4f5c-90f9-ef05ef91beea/outputs/neuro/index.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1530">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Neuro">
+  <link rel="manifest" href="file:///Users/kait_personal/Library/Application%20Support/Claude/local-agent-mode-sessions/123dbc9a-dcd0-47c9-9149-67c9d0656de0/064edd1e-5264-49f4-9ce7-ce276a14b0ae/local_ffb343f7-d2d9-4f5c-90f9-ef05ef91beea/outputs/neuro/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="file:///Users/kait_personal/Library/Application%20Support/Claude/local-agent-mode-sessions/123dbc9a-dcd0-47c9-9149-67c9d0656de0/064edd1e-5264-49f4-9ce7-ce276a14b0ae/local_ffb343f7-d2d9-4f5c-90f9-ef05ef91beea/outputs/neuro/icon-192.png">
+  <title>Neuro</title>
+
+  <link href="./Neuro_files/css2" rel="stylesheet">
+  <link href="./Neuro_files/css" rel="stylesheet">
+
+  <link rel="stylesheet" href="./Neuro_files/tokens.css">
+  <link rel="stylesheet" href="./Neuro_files/base.css">
+  <link rel="stylesheet" href="./Neuro_files/components.css">
+  <link rel="stylesheet" href="./Neuro_files/screens.css">
+</head>
+<body>
+
+  <div id="app">
+
+    <!-- World background (changes with time of day) -->
+    <div class="world-bg" id="world-bg"></div>
+
+    <!-- Stars -->
+    <div class="stars" id="stars"><div class="star" style="height: 1.9155px; width: 1.9155px; left: 28.3742%; top: 34.7264%; animation-delay: 2.9316s;"></div><div class="star" style="height: 0.870024px; width: 0.870024px; left: 26.2592%; top: 54.0421%; animation-delay: 0.215132s;"></div><div class="star" style="height: 1.09734px; width: 1.09734px; left: 23.389%; top: 60.3239%; animation-delay: 1.90084s;"></div><div class="star" style="height: 1.38445px; width: 1.38445px; left: 54.8881%; top: 19.6819%; animation-delay: 3.1443s;"></div><div class="star" style="height: 0.928933px; width: 0.928933px; left: 89.4704%; top: 13.4742%; animation-delay: 1.51384s;"></div><div class="star" style="height: 1.42945px; width: 1.42945px; left: 44.9747%; top: 18.0939%; animation-delay: 0.313949s;"></div><div class="star" style="height: 0.918608px; width: 0.918608px; left: 21.7472%; top: 39.0002%; animation-delay: 3.39075s;"></div><div class="star" style="height: 1.25018px; width: 1.25018px; left: 96.1397%; top: 40.2454%; animation-delay: 1.47902s;"></div><div class="star" style="height: 1.22474px; width: 1.22474px; left: 29.0317%; top: 35.9803%; animation-delay: 3.27821s;"></div><div class="star" style="height: 2.33377px; width: 2.33377px; left: 20.0055%; top: 20.9961%; animation-delay: 2.54757s;"></div><div class="star" style="height: 0.959837px; width: 0.959837px; left: 7.62624%; top: 61.2859%; animation-delay: 2.26709s;"></div><div class="star" style="height: 2.16756px; width: 2.16756px; left: 4.07189%; top: 36.1693%; animation-delay: 2.74041s;"></div><div class="star" style="height: 1.1472px; width: 1.1472px; left: 79.5155%; top: 37.7771%; animation-delay: 0.33519s;"></div><div class="star" style="height: 0.701754px; width: 0.701754px; left: 7.17352%; top: 57.4143%; animation-delay: 2.94948s;"></div><div class="star" style="height: 1.27253px; width: 1.27253px; left: 29.1398%; top: 6.70844%; animation-delay: 3.65073s;"></div><div class="star" style="height: 2.02317px; width: 2.02317px; left: 2.47168%; top: 12.003%; animation-delay: 0.785101s;"></div><div class="star" style="height: 1.41632px; width: 1.41632px; left: 64.8185%; top: 44.8871%; animation-delay: 2.12857s;"></div><div class="star" style="height: 1.08602px; width: 1.08602px; left: 13.5247%; top: 56.824%; animation-delay: 0.990975s;"></div><div class="star" style="height: 1.45007px; width: 1.45007px; left: 68.314%; top: 10.4033%; animation-delay: 0.358953s;"></div><div class="star" style="height: 1.19042px; width: 1.19042px; left: 60.109%; top: 16.5094%; animation-delay: 0.248117s;"></div><div class="star" style="height: 1.94135px; width: 1.94135px; left: 31.4468%; top: 59.6146%; animation-delay: 0.801265s;"></div><div class="star" style="height: 1.92602px; width: 1.92602px; left: 88.741%; top: 24.9645%; animation-delay: 1.71345s;"></div><div class="star" style="height: 2.31483px; width: 2.31483px; left: 99.7937%; top: 62.3776%; animation-delay: 3.68613s;"></div><div class="star" style="height: 1.067px; width: 1.067px; left: 57.575%; top: 14.3075%; animation-delay: 3.04482s;"></div><div class="star" style="height: 1.5233px; width: 1.5233px; left: 94.3381%; top: 36.8256%; animation-delay: 0.673229s;"></div><div class="star" style="height: 2.51193px; width: 2.51193px; left: 75.7132%; top: 0.0337939%; animation-delay: 0.573485s;"></div><div class="star" style="height: 1.0726px; width: 1.0726px; left: 46.9328%; top: 1.96803%; animation-delay: 3.20172s;"></div><div class="star" style="height: 0.690259px; width: 0.690259px; left: 63.8909%; top: 55.7445%; animation-delay: 1.68237s;"></div><div class="star" style="height: 1.90516px; width: 1.90516px; left: 60.8903%; top: 29.5646%; animation-delay: 3.66293s;"></div><div class="star" style="height: 2.4705px; width: 2.4705px; left: 80.7109%; top: 59.2582%; animation-delay: 0.374247s;"></div><div class="star" style="height: 2.18054px; width: 2.18054px; left: 27.694%; top: 4.20267%; animation-delay: 0.583407s;"></div><div class="star" style="height: 2.51061px; width: 2.51061px; left: 89.9366%; top: 58.8081%; animation-delay: 1.93638s;"></div><div class="star" style="height: 2.13036px; width: 2.13036px; left: 36.2924%; top: 38.0687%; animation-delay: 1.6959s;"></div><div class="star" style="height: 0.982463px; width: 0.982463px; left: 39.3073%; top: 12.663%; animation-delay: 1.94102s;"></div><div class="star" style="height: 1.44278px; width: 1.44278px; left: 76.0222%; top: 7.16676%; animation-delay: 1.33573s;"></div></div>
+
+    <!-- ============== ONBOARDING ============== -->
+    <section class="screen screen-onboarding" id="screen-onboarding">
+      <div class="onb-stage" id="onb-stage"></div>
+    </section>
+
+    <!-- ============== HOME / TODAY ============== -->
+    <section class="screen screen-home is-active" id="screen-home">
+      <div class="status-bar">
+        <span id="status-time">16:04</span>
+        <div class="status-icons">
+          <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M1 8h1M4 6h1M7 4h1M10 2h1M13 0.5h1" stroke="#f5f0ff" stroke-width="2" stroke-linecap="round"></path></svg>
+          <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M7 8.5a1 1 0 100-2 1 1 0 000 2zM10 5.5c-.83-.83-1.92-1.3-3-1.3s-2.17.47-3 1.3M12.5 3c-1.5-1.5-3.5-2.3-5.5-2.3S3 1.5 1.5 3" stroke="#f5f0ff" stroke-width="1.2" stroke-linecap="round"></path></svg>
+          <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><rect x="0.5" y="0.5" width="18" height="9" rx="2" stroke="#f5f0ff" opacity="0.6"></rect><rect x="2" y="2" width="13" height="6" rx="1" fill="#f5f0ff"></rect><rect x="19.5" y="3" width="1.5" height="4" rx="0.5" fill="#f5f0ff" opacity="0.6"></rect></svg>
+        </div>
+      </div>
+
+      <div class="scroll" id="home-scroll">
+        <div class="greeting">
+          <div class="greeting-eyebrow" id="home-date">saturday 11 april</div>
+          <div class="greeting-main"><em id="home-greet">hey there,</em><br><span class="accent" id="home-name">kait</span></div>
+        </div>
+
+        <div class="neuro-scene">
+          <div class="orb orb-1"></div>
+          <div class="orb orb-2"></div>
+          <div class="orb orb-3"></div>
+
+          <div class="floating-obj obj-mood" id="obj-mood">
+            <div class="fo-icon"><div class="obj-mood-dot"></div></div>
+            <div>
+              <div class="fo-label">mood</div>
+              <div class="fo-value" id="mood-value">tap to log</div>
+            </div>
+          </div>
+
+          <div class="floating-obj obj-meds" id="obj-meds">
+            <div class="fo-icon"><div class="obj-meds-dot" id="meds-dot"></div></div>
+            <div>
+              <div class="fo-label">meds</div>
+              <div class="fo-value" id="meds-value">tap me</div>
+            </div>
+          </div>
+
+          <div class="neuro-char" id="neuro-home">
+      <svg viewBox="0 0 200 240" width="180" height="240" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialgradient id="brainGrad-ncmaw6t" cx="40%" cy="35%" r="70%">
+            <stop offset="0%" stop-color="#e8fff5"></stop>
+            <stop offset="35%" stop-color="#a8f0d4"></stop>
+            <stop offset="75%" stop-color="#6ad4b4"></stop>
+            <stop offset="100%" stop-color="#4a9e85"></stop>
+          </radialgradient>
+          <radialgradient id="bodyGrad-ncmaw6t" cx="40%" cy="30%" r="80%">
+            <stop offset="0%" stop-color="#e4d4e8"></stop>
+            <stop offset="50%" stop-color="#c7b8c8"></stop>
+            <stop offset="100%" stop-color="#8e7d95"></stop>
+          </radialgradient>
+          <filter id="brainGlow-ncmaw6t" x="-50%" y="-50%" width="200%" height="200%">
+            <fegaussianblur stdDeviation="8" result="blur"></fegaussianblur>
+            <femerge>
+              <femergenode in="blur"></femergenode>
+              <femergenode in="SourceGraphic"></femergenode>
+            </femerge>
+          </filter>
+          <filter id="pathGlow-ncmaw6t">
+            <fegaussianblur stdDeviation="1.5"></fegaussianblur>
+          </filter>
+        </defs>
+
+        <ellipse cx="100" cy="70" rx="78" ry="62" fill="#a8f0d4" opacity="0.18" filter="url(#brainGlow-ncmaw6t)"></ellipse>
+
+        <ellipse cx="100" cy="170" rx="62" ry="55" fill="url(#bodyGrad-ncmaw6t)"></ellipse>
+        <ellipse cx="80" cy="150" rx="28" ry="18" fill="#f0e4f2" opacity="0.35"></ellipse>
+        <ellipse cx="100" cy="225" rx="55" ry="8" fill="#000" opacity="0.25"></ellipse>
+
+        <ellipse cx="82" cy="175" rx="5" ry="7" fill="#1a1530"></ellipse>
+             <ellipse cx="118" cy="175" rx="5" ry="7" fill="#1a1530"></ellipse>
+             <circle cx="84" cy="172" r="1.8" fill="#fff"></circle>
+             <circle cx="120" cy="172" r="1.8" fill="#fff"></circle>
+
+        <g filter="url(#brainGlow-ncmaw6t)">
+          <path d="M100,20 C70,20 42,38 42,68 C42,92 58,108 72,115 C80,120 92,122 100,122 C108,122 120,120 128,115 C142,108 158,92 158,68 C158,38 130,20 100,20 Z" fill="url(#brainGrad-ncmaw6t)"></path>
+          <path d="M100,20 C100,50 95,80 100,115" stroke="#4a9e85" stroke-width="1.5" fill="none" opacity="0.4"></path>
+          <path d="M70,40 Q75,60 72,90" stroke="#4a9e85" stroke-width="1" fill="none" opacity="0.3"></path>
+          <path d="M130,40 Q128,60 130,90" stroke="#4a9e85" stroke-width="1" fill="none" opacity="0.3"></path>
+          <g filter="url(#pathGlow-ncmaw6t)" opacity="0.85">
+            <path d="M60,70 Q78,60 90,75 T115,68 Q128,60 140,72" stroke="#e8fff5" stroke-width="1.2" fill="none"></path>
+            <path d="M65,90 Q80,82 95,95 Q110,105 130,95" stroke="#e8fff5" stroke-width="1" fill="none"></path>
+            <circle cx="78" cy="68" r="1.5" fill="#fff"></circle>
+            <circle cx="115" cy="68" r="1.5" fill="#fff"></circle>
+            <circle cx="95" cy="95" r="1.5" fill="#fff"></circle>
+            <circle cx="130" cy="78" r="1.3" fill="#fff"></circle>
+          </g>
+          <ellipse cx="78" cy="45" rx="20" ry="12" fill="#fff" opacity="0.35"></ellipse>
+        </g>
+      </svg>
+    </div>
+
+          <div class="neuro-bubble" id="neuro-bubble">what's one nice thing?</div>
+        </div>
+
+        <div class="pathways-hint" id="pathways-hint">
+          <span class="dot"></span>
+          <span>tap me to see what we're building</span>
+          <span class="dot"></span>
+        </div>
+
+        <!-- Upcoming appointments / reminders for today -->
+        <div id="home-appts"></div>
+
+        <div class="day-section">
+          <div class="section-header">
+            <div class="section-title">your <em>day</em></div>
+            <div class="section-meta" id="day-meta">no plan yet</div>
+          </div>
+          <div class="day-grid" id="home-day-grid"></div>
+        </div>
+
+        <div class="progress-section" id="progress-section">
+          <div class="progress-top">
+            <div class="progress-label">today's pathway</div>
+            <div class="progress-count"><span id="progress-done">0</span><span id="progress-total"> / 0</span></div>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <div class="progress-note" id="progress-note">no tasks yet — tap plan below to start</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== PLAN ============== -->
+    <section class="screen screen-plan" id="screen-plan">
+      <div class="status-bar"><span>9:41</span><div class="status-icons"></div></div>
+      <div class="scroll">
+        <div class="screen-header">
+          <div class="plan-header-row">
+            <div>
+              <div class="t-eyebrow">plan</div>
+              <h1 class="screen-title">your <em>days</em></h1>
+            </div>
+            <button class="header-pill" id="btn-jump-date">jump →</button>
+          </div>
+        </div>
+
+        <div class="day-strip" id="day-strip"></div>
+
+        <div class="plan-selected-date" id="plan-selected-date"></div>
+
+        <!-- Time-blocked task list -->
+        <div class="plan-blocks" id="plan-blocks"></div>
+
+        <!-- Inline quick add -->
+        <div class="quick-add" id="quick-add">
+          <div class="quick-add-row">
+            <input class="quick-add-input" id="qa-input" placeholder="add a task… (e.g. walk dog)" autocomplete="off">
+            <button class="quick-add-btn" id="qa-submit">+</button>
+          </div>
+          <div class="quick-add-meta" id="qa-meta">
+            <button class="qa-chip" id="qa-block">anytime</button>
+            <button class="qa-chip" id="qa-cat">category</button>
+            <button class="qa-chip" id="qa-mins">10 min</button>
+          </div>
+        </div>
+
+        <div class="plan-actions">
+          <button class="btn btn-primary btn-full" id="btn-add-tasks">+ from task library</button>
+          <div class="plan-actions-row">
+            <button class="btn btn-ghost" id="btn-templates">templates</button>
+            <button class="btn btn-ghost" id="btn-add-appt">+ appointment</button>
+          </div>
+          <button class="btn btn-ghost btn-full" id="btn-talk-plan">tell neuro what's on your mind</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== NEURO CHAT ============== -->
+    <section class="screen screen-chat" id="screen-chat">
+      <div class="status-bar"><span>9:41</span><div class="status-icons"></div></div>
+      <div class="chat-header">
+        <div class="chat-neuro-orb" id="chat-neuro-orb"></div>
+        <div>
+          <div class="chat-name" id="chat-name">neuro</div>
+          <div class="chat-tag">your brain's sidekick</div>
+        </div>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-quick" id="chat-quick">
+        <button class="quick-pill" data-msg="plan my day">plan my day</button>
+        <button class="quick-pill" data-msg="i&#39;m spiralling">i'm spiralling</button>
+        <button class="quick-pill" data-msg="self care idea">self care idea</button>
+        <button class="quick-pill" data-msg="help me write a message">people script</button>
+      </div>
+      <div class="chat-input-bar">
+        <input type="text" id="chat-input" placeholder="say anything…" autocomplete="off">
+        <button class="chat-send" id="chat-send">→</button>
+      </div>
+    </section>
+
+    <!-- ============== PATHWAYS (BRAIN ZOOM) ============== -->
+    <section class="screen screen-paths" id="screen-paths">
+      <div class="status-bar"><span>9:41</span><div class="status-icons"></div></div>
+      <div class="scroll">
+        <div class="screen-header">
+          <div class="t-eyebrow">inside neuro's brain</div>
+          <h1 class="screen-title">your <em>pathways</em></h1>
+        </div>
+        <div class="brain-canvas" id="brain-canvas"></div>
+        <div class="path-legend" id="path-legend"></div>
+      </div>
+    </section>
+
+    <!-- ============== YOU ============== -->
+    <section class="screen screen-you" id="screen-you">
+      <div class="status-bar"><span>9:41</span><div class="status-icons"></div></div>
+      <div class="scroll">
+        <div class="screen-header">
+          <div class="t-eyebrow">profile</div>
+          <h1 class="screen-title">all about <em>you</em></h1>
+        </div>
+
+        <div class="you-card" id="profile-card">
+          <div class="you-card-row">
+            <div>
+              <div class="t-eyebrow">name</div>
+              <div class="you-card-value" id="you-name">—</div>
+            </div>
+            <button class="btn-edit" id="btn-edit-profile">edit</button>
+          </div>
+          <div class="you-card-row">
+            <div>
+              <div class="t-eyebrow">pronouns</div>
+              <div class="you-card-value" id="you-pronouns">—</div>
+            </div>
+          </div>
+          <div class="you-card-row">
+            <div>
+              <div class="t-eyebrow">your neuro</div>
+              <div class="you-card-value" id="you-neuro">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="t-eyebrow">avg mood</div>
+            <div class="stat-value" id="stat-mood">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="t-eyebrow">tasks done</div>
+            <div class="stat-value" id="stat-tasks">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="t-eyebrow">meds streak</div>
+            <div class="stat-value" id="stat-meds">0</div>
+          </div>
+        </div>
+
+        <div class="you-section">
+          <div class="t-eyebrow" style="padding:0 4px 10px">category balance</div>
+          <div class="cat-bars" id="cat-bars"></div>
+        </div>
+
+        <div class="you-section">
+          <div class="t-eyebrow" style="padding:0 4px 10px">mood history</div>
+          <div class="mood-bars" id="mood-bars"></div>
+        </div>
+
+        <div class="you-card emergency-card" id="emergency-card">
+          <div class="t-eyebrow" style="color:#ff9b8a">emergency info vault</div>
+          <div class="you-card-value" style="margin-top:6px">always here when you need it</div>
+          <button class="btn-edit" id="btn-edit-emergency">open</button>
+        </div>
+
+        <div class="you-section">
+          <div class="t-eyebrow" style="padding:0 4px 10px">settings</div>
+          <button class="settings-row" id="btn-notify">
+            <span>reminders &amp; nudges</span>
+            <span id="notify-status">→</span>
+          </button>
+          <button class="settings-row" id="btn-api-key">
+            <span>connect claude (optional)</span>
+            <span id="api-status">→</span>
+          </button>
+          <button class="settings-row" id="btn-export-data">
+            <span>export my data</span><span>→</span>
+          </button>
+          <button class="settings-row" id="btn-retake-quiz">
+            <span>retake the quiz</span><span>→</span>
+          </button>
+          <button class="settings-row danger" id="btn-clear-data">
+            <span>clear all data</span><span>→</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== NAV BAR ============== -->
+    <nav class="nav" id="nav" style="display: flex;">
+      <button class="nav-item is-active" data-screen="home">
+        <div class="nav-icon-wrap">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M3 11l9-8 9 8v10a2 2 0 01-2 2h-4v-7h-6v7H5a2 2 0 01-2-2V11z" stroke-width="2" stroke-linejoin="round"></path></svg>
+        </div>
+        <div class="nav-label">today</div>
+      </button>
+      <button class="nav-item" data-screen="plan">
+        <div class="nav-icon-wrap">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke-width="2"></rect><path d="M3 10h18M8 3v4M16 3v4" stroke-width="2" stroke-linecap="round"></path></svg>
+        </div>
+        <div class="nav-label">plan</div>
+      </button>
+      <button class="nav-item nav-neuro" data-screen="chat">
+        <div class="nav-neuro-wrap">
+          <div class="nav-neuro-eyes"><span></span><span></span></div>
+        </div>
+        <div class="nav-label" id="nav-neuro-name">minnie</div>
+      </button>
+      <button class="nav-item" data-screen="paths">
+        <div class="nav-icon-wrap">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M12 2C7 2 4 6 4 10c0 3 2 5 2 7v3a1 1 0 001 1h10a1 1 0 001-1v-3c0-2 2-4 2-7 0-4-3-8-8-8z" stroke-width="2" stroke-linejoin="round"></path><path d="M9 11c1-1 2-1 3-1M12 10c1 0 2 0 3 1" stroke-width="1.3" stroke-linecap="round"></path></svg>
+        </div>
+        <div class="nav-label">paths</div>
+      </button>
+      <button class="nav-item" data-screen="you">
+        <div class="nav-icon-wrap">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke-width="2"></circle><path d="M4 21a8 8 0 0116 0" stroke-width="2" stroke-linecap="round"></path></svg>
+        </div>
+        <div class="nav-label">you</div>
+      </button>
+    </nav>
+
+    <!-- Bottom sheet & backdrop (universal) -->
+    <div class="backdrop" id="backdrop"></div>
+    <div class="sheet" id="sheet"></div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+  </div>
+
+  <script src="./Neuro_files/taskbank.js"></script>
+  <script src="./Neuro_files/storage.js"></script>
+  <script src="./Neuro_files/neuro-char.js"></script>
+  <script src="./Neuro_files/neuro-voice.js"></script>
+  <script src="./Neuro_files/ui.js"></script>
+  <script src="./Neuro_files/onboarding.js"></script>
+  <script src="./Neuro_files/notify.js"></script>
+  <script src="./Neuro_files/screens.js"></script>
+  <script src="./Neuro_files/app.js"></script>
+
+
+</body></html>
