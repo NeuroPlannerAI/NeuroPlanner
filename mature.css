@@ -1,0 +1,158 @@
+/* ============================================================
+   NEURO — MATURE TYPE & VOICE OVERRIDE
+   Flips the type system: sans-serif is the main voice,
+   serif italics are reserved for accent words (inside <em>).
+   Also drops the lowercase-everything aesthetic in favour
+   of sentence case with selective lowercase.
+   Load this LAST so it overrides earlier CSS.
+   ============================================================ */
+
+/* ---- Base: everything sans by default, including things
+   that were previously serif like hero titles, buttons, chips. */
+.hero-title,
+.section-title,
+.screen-title,
+.sheet-title,
+.greeting-main,
+.greeting-main em#home-greet,
+.neuro-bubble,
+.nav-label,
+.chip,
+.fo-value,
+.fo-label,
+.quick-tile-value,
+.msg,
+.day-cell-date,
+.task-row,
+.tmpl-name,
+.settings-row,
+.card-title,
+.t-serif,
+.t-serif-italic,
+.btn,
+.btn-primary,
+.btn-ghost,
+.picker-tab,
+.mood-option-label,
+.mood-col-day,
+.cat-bar-name,
+.section-meta,
+.progress-label,
+.progress-note,
+.progress-count,
+.day-meta,
+.hero-eyebrow,
+.home-appt-title,
+.home-appt-meta,
+.home-appt-time,
+.time-block-name,
+.cat-chip,
+.block-pick,
+.qa-chip,
+.quick-add-input,
+.header-pill,
+.plan-selected-date,
+.template-card-name,
+.template-card-meta,
+.template-card-tasks,
+.field-input,
+.field-label,
+.mood-value,
+.meds-value {
+  font-family: var(--font-sans) !important;
+  font-style: normal !important;
+}
+
+/* ---- Accent italics: only `em` inside titles/headings keep the serif.
+   This gives us the elegant "one italic word" moment without making
+   the whole UI feel like a diary. */
+.hero-title em,
+.section-title em,
+.screen-title em,
+.sheet-title em,
+.greeting-main em.accent,
+.greeting-main .accent {
+  font-family: var(--font-serif) !important;
+  font-style: italic !important;
+  font-weight: 400;
+}
+
+/* ---- Kill the aggressive lowercase on titles/labels. */
+.hero-title,
+.section-title,
+.screen-title,
+.sheet-title,
+.greeting-main,
+.chip,
+.btn,
+.btn-primary,
+.btn-ghost,
+.nav-label,
+.fo-value,
+.quick-tile-value,
+.quick-tile-label,
+.card-title,
+.settings-row,
+.picker-tab,
+.mood-option-label,
+.time-block-name,
+.header-pill,
+.home-appt-title,
+.home-appt-meta,
+.template-card-name,
+.template-card-meta,
+.progress-label,
+.section-meta,
+.hero-eyebrow,
+.field-label,
+.t-eyebrow {
+  text-transform: none !important;
+}
+
+/* Eyebrows were smallcaps — let them keep smallcaps since that's editorial,
+   not childish. But bump the tracking. */
+.t-eyebrow,
+.hero-eyebrow,
+.field-label {
+  text-transform: uppercase !important;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+
+/* ---- Sharper weight + tighter tracking on headings for adult feel. */
+.hero-title,
+.section-title,
+.screen-title,
+.sheet-title,
+.greeting-main {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ---- Body text weight bump for readability on dark background. */
+body, .scroll { font-weight: 450; }
+
+/* ---- Chat messages: sans, not italic serif. */
+.msg {
+  font-style: normal !important;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+/* ---- Toast: editorial, not diary. */
+.toast {
+  font-family: var(--font-sans) !important;
+  font-style: normal !important;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Neuro speech bubble: drop italic serif, use sans. */
+.neuro-bubble {
+  font-family: var(--font-sans) !important;
+  font-style: normal !important;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.005em;
+}
