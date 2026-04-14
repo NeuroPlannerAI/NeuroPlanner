@@ -1,22 +1,23 @@
 // Neuro — minimal service worker for offline + notifications
-const CACHE = 'neuro-v2';
+const CACHE = 'neuro-v3-flat';
 const CORE = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './css/tokens.css',
-  './css/base.css',
-  './css/components.css',
-  './css/screens.css',
-  './js/storage.js',
-  './js/ui.js',
-  './js/taskbank.js',
-  './js/neuro-char.js',
-  './js/neuro-voice.js',
-  './js/onboarding.js',
-  './js/screens.js',
-  './js/notify.js',
-  './js/app.js',
+  './tokens.css',
+  './base.css',
+  './components.css',
+  './screens.css',
+  './mature.css',
+  './storage.js',
+  './ui.js',
+  './taskbank.js',
+  './neuro-char.js',
+  './neuro-voice.js',
+  './onboarding.js',
+  './screens.js',
+  './notify.js',
+  './app.js',
   './icon-192.png',
   './icon-512.png'
 ];
