@@ -156,3 +156,20 @@ body, .scroll { font-weight: 450; }
   font-size: 14px;
   letter-spacing: 0.005em;
 }
+
+/* ---- Hide the fake status bar on real mobile (duplicates the phone's own). */
+.status-bar { display: none !important; }
+
+/* ---- You-page buttons: make sure they're tappable on mobile. */
+.settings-row,
+.btn-edit,
+.emergency-card,
+.you-card-row button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  position: relative;
+  z-index: 3;
+  pointer-events: auto;
+}
+.settings-row { text-align: left; }
