@@ -157,20 +157,12 @@ body, .scroll { font-weight: 450; }
   letter-spacing: 0.005em;
 }
 
-/* ---- Hide the fake status bar on real mobile (duplicates the phone's own). */
-.status-bar { display: none !important; }
-
-/* ---- Respect the phone's notch + home indicator.
-   Push the app content down below the real status bar,
-   and add bottom padding so the nav clears the home bar. */
-.screen,
-.app-shell,
-body {
-  padding-top: env(safe-area-inset-top, 44px) !important;
-}
-.bottom-nav,
-.nav-bar {
-  padding-bottom: env(safe-area-inset-bottom, 16px) !important;
+/* ---- Hide the fake status bar's content, but keep its height so the
+   real notch/status area on iPhone doesn't overlap our content. */
+.status-bar > * { visibility: hidden !important; }
+.status-bar {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
+  padding-bottom: 4px !important;
 }
 
 /* ---- You-page buttons: make sure they're tappable on mobile. */
