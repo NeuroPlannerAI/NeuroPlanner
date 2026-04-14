@@ -160,6 +160,19 @@ body, .scroll { font-weight: 450; }
 /* ---- Hide the fake status bar on real mobile (duplicates the phone's own). */
 .status-bar { display: none !important; }
 
+/* ---- Respect the phone's notch + home indicator.
+   Push the app content down below the real status bar,
+   and add bottom padding so the nav clears the home bar. */
+.screen,
+.app-shell,
+body {
+  padding-top: env(safe-area-inset-top, 44px) !important;
+}
+.bottom-nav,
+.nav-bar {
+  padding-bottom: env(safe-area-inset-bottom, 16px) !important;
+}
+
 /* ---- You-page buttons: make sure they're tappable on mobile. */
 .settings-row,
 .btn-edit,
